@@ -44,6 +44,7 @@ Terminal > Run Task > Start Job Agent
 - ממשק העלאת קורות חיים: `public/index.html`
 - שרת מקומי: `server.mjs`
 - חילוץ טקסט מ-PDF/DOCX/TXT: `scripts/extract_resume.py`
+- מחברי משרות פתוחים: `src/connectors/remotive.mjs`, `src/connectors/himalayas.mjs`
 - מנוע דירוג התאמה: `src/matcher.mjs`
 - יצוא תוצאות ל-JSON ול-CSV: `outputs/matches.json`, `outputs/matches.csv`
 
@@ -118,6 +119,9 @@ CLI:
 מקורות מוגדרים בקובץ `config/sources.json`.
 מקור מסוג `file` קורא קובץ JSON מקומי.
 מקור מסוג `jsonApi` קורא API שמחזיר JSON וממפה שדות למבנה אחיד של משרה.
+מקור מסוג `remotive` מחפש משרות מרחוק דרך API פתוח.
+מקור מסוג `himalayas` מחפש משרות מרחוק דרך API פתוח.
+מקור מסוג `searchPage` יוצר קישורי חיפוש מדויקים לאתרים שאין להם API ציבורי פתוח.
 
 דוגמה ל-API:
 
@@ -159,5 +163,7 @@ $env:JOB_API_TOKEN = "your-token"
 - `LinkedIn`: הממשקים הרשמיים פתוחים בעיקר לשותפים מאושרים ולמערכות ATS/פרסום משרות. זה לא API ציבורי רגיל לחיפוש משרות למועמד.
 - `AllJobs`: לא נמצא תיעוד API ציבורי רשמי. צריך API/Feed מאושר, יצוא נתונים, או אישור אינטגרציה.
 - `Drushim`: לא נמצא תיעוד API ציבורי רשמי. צריך API/Feed מאושר, יצוא נתונים, או אישור אינטגרציה.
+- `Remotive`: מחובר כמקור API פתוח למשרות מרחוק.
+- `Himalayas`: מחובר כמקור API פתוח למשרות מרחוק.
 
 המערכת מוכנה לקלוט כל מקור חוקי שמחזיר JSON, גם אם הוא מגיע מספק חיצוני, Feed של חברה, או יצוא מאתר משרות.

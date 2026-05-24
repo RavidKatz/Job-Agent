@@ -99,14 +99,15 @@ async function handleMatch(request, response) {
 
   const uploadedJobs = parseJobsPayload(fields, files);
   const sourceResult = uploadedJobs
-    ? { jobs: uploadedJobs, notices: ["Using uploaded jobs JSON."] }
+    ? { jobs: uploadedJobs, notices: ["Using uploaded jobs JSON."], sourceLinks: [] }
     : await loadJobs(rootDir, { sourcesPath: "config/sources.json" });
 
   const analysis = analyzeJobs({
     resumeText,
     jobs: sourceResult.jobs,
     config,
-    sourceNotices: sourceResult.notices
+    sourceNotices: sourceResult.notices,
+    sourceLinks: sourceResult.sourceLinks
   });
 
   json(response, 200, {

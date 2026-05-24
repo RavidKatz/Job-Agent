@@ -13,6 +13,7 @@ const matchCount = document.querySelector("#matchCount");
 const termCount = document.querySelector("#termCount");
 const generatedAt = document.querySelector("#generatedAt");
 const resultsBody = document.querySelector("#resultsBody");
+const sourceLinks = document.querySelector("#sourceLinks");
 
 let latestCsv = "";
 
@@ -47,6 +48,7 @@ function renderMatches(analysis) {
   matchCount.textContent = analysis.matches?.length ?? 0;
   termCount.textContent = analysis.resumeTerms?.length ?? 0;
   generatedAt.textContent = analysis.generatedAt ? formatDate(analysis.generatedAt) : "";
+  renderSourceLinks(analysis.sourceLinks ?? []);
 
   if (!analysis.matches?.length) {
     resultsBody.innerHTML = `<tr><td colspan="6" class="empty-state">לא נמצאו משרות מעל הסף הנוכחי</td></tr>`;
@@ -62,6 +64,19 @@ function renderMatches(analysis) {
       <td class="notes">${escapeHtml(match.notes || match.warnings || "")}</td>
       <td>${renderApplyAction(match)}</td>
     </tr>
+  `).join("");
+}
+
+function renderSourceLinks(links) {
+  if (!links.length) {
+    sourceLinks.innerHTML = `<span class="empty-state inline">אין קישורי חיפוש עדיין</span>`;
+    return;
+  }
+
+  sourceLinks.innerHTML = links.map((link) => `
+    <a class="source-link" href="${escapeAttribute(link.url)}" target="_blank" rel="noreferrer">
+      ${escapeHtml(link.label)}
+    </a>
   `).join("");
 }
 

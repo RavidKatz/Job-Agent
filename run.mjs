@@ -36,7 +36,8 @@ const analysis = analyzeJobs({
   resumeText,
   jobs: sourceResult.jobs,
   config,
-  sourceNotices: sourceResult.notices
+  sourceNotices: sourceResult.notices,
+  sourceLinks: sourceResult.sourceLinks
 });
 
 await writeAnalysis(rootDir, analysis, { outJson: args.outJson, outCsv: args.outCsv });
@@ -46,6 +47,9 @@ console.log(`Jobs scanned: ${analysis.jobsScanned}`);
 console.log(`Matches >= ${analysis.minimumScore}%: ${analysis.matches.length}`);
 for (const notice of analysis.sourceNotices) {
   console.log(`Source notice: ${notice}`);
+}
+for (const link of analysis.sourceLinks) {
+  console.log(`Source search: ${link.label} | ${link.url}`);
 }
 for (const match of analysis.matches) {
   console.log(`${match.matchPercent}% | ${match.company} | ${match.position} | ${match.applyUrl}`);

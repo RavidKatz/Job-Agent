@@ -13,12 +13,12 @@ export async function loadResumeFromFile(rootDir, resumePath) {
 
 export async function loadJobs(rootDir, { jobsPath = "", sourcesPath = "config/sources.json" } = {}) {
   if (jobsPath) {
-    return { jobs: await readJson(resolveLocal(jobsPath, rootDir)), notices: [] };
+    return { jobs: await readJson(resolveLocal(jobsPath, rootDir)), notices: [], sourceLinks: [] };
   }
   return loadJobsFromSources({ rootDir, sourcesPath });
 }
 
-export function analyzeJobs({ resumeText, jobs, config, sourceNotices = [] }) {
+export function analyzeJobs({ resumeText, jobs, config, sourceNotices = [], sourceLinks = [] }) {
   const resumeProfile = buildResumeProfile(resumeText, config);
   const ranked = rankJobs(jobs, resumeProfile, config);
   const matches = ranked.filter((job) => job.matchPercent >= config.minimumScore);
@@ -29,6 +29,7 @@ export function analyzeJobs({ resumeText, jobs, config, sourceNotices = [] }) {
     jobsScanned: jobs.length,
     resumeTerms: resumeProfile.matchedConfiguredTerms,
     sourceNotices,
+    sourceLinks,
     matches
   };
 }

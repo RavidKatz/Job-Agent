@@ -1,58 +1,100 @@
 {
   "sources": [
     {
+      "id": "remotive",
+      "name": "Remotive",
+      "type": "remotive",
+      "enabled": true,
+      "maxQueries": 2,
+      "limit": 20,
+      "searchTerms": [
+        "project manager",
+        "operations manager",
+        "product operations",
+        "ai project manager"
+      ]
+    },
+    {
+      "id": "himalayas",
+      "name": "Himalayas",
+      "type": "himalayas",
+      "enabled": true,
+      "maxQueries": 2,
+      "searchTerms": [
+        "project manager",
+        "operations manager",
+        "product operations",
+        "ai project manager"
+      ]
+    },
+    {
+      "id": "linkedin-search",
+      "name": "LinkedIn",
+      "type": "searchPage",
+      "enabled": true,
+      "maxQueries": 4,
+      "urlTemplate": "https://www.linkedin.com/jobs/search/?keywords={queryEncoded}&location=Israel",
+      "searchTerms": [
+        "AI Project Manager",
+        "PMO",
+        "Digital Project Manager",
+        "Business Applications Manager"
+      ],
+      "reason": "LinkedIn does not provide a simple public candidate job-search API. This opens exact search pages until an approved API or data provider is connected."
+    },
+    {
+      "id": "alljobs-search",
+      "name": "AllJobs",
+      "type": "searchPage",
+      "enabled": true,
+      "maxQueries": 4,
+      "urlTemplate": "https://www.alljobs.co.il/SearchResultsGuest.aspx?keyWord={queryEncoded}",
+      "searchTerms": [
+        "AI Project Manager",
+        "PMO",
+        "Digital Project Manager",
+        "Business Applications Manager"
+      ],
+      "reason": "No public official API documentation was found. This opens search pages until an approved feed or API is connected."
+    },
+    {
+      "id": "drushim-search",
+      "name": "Drushim",
+      "type": "searchPage",
+      "enabled": true,
+      "maxQueries": 4,
+      "urlTemplate": "https://www.drushim.co.il/jobs/search/{queryEncoded}/",
+      "searchTerms": [
+        "AI Project Manager",
+        "PMO",
+        "Digital Project Manager",
+        "Business Applications Manager"
+      ],
+      "reason": "No public official API documentation was found. This opens search pages until an approved feed or API is connected."
+    },
+    {
+      "id": "adzuna",
+      "name": "Adzuna",
+      "type": "jsonApi",
+      "enabled": false,
+      "url": "https://api.adzuna.com/v1/api/jobs/il/search/1?app_id=${ADZUNA_APP_ID}&app_key=${ADZUNA_APP_KEY}&what=project%20manager&where=Israel",
+      "arrayPath": "results",
+      "fieldMap": {
+        "company": "company.display_name",
+        "title": "title",
+        "location": "location.display_name",
+        "applyUrl": "redirect_url",
+        "postedAt": "created",
+        "description": "description"
+      },
+      "reason": "Requires app_id and app_key."
+    },
+    {
       "id": "manual-sample",
       "name": "Manual sample jobs",
       "type": "file",
-      "enabled": true,
+      "enabled": false,
       "path": "data/jobs.sample.json"
-    },
-    {
-      "id": "custom-json-api",
-      "name": "Custom JSON jobs API",
-      "type": "jsonApi",
-      "enabled": false,
-      "url": "https://api.example.com/jobs?q=PMO&location=Israel",
-      "headers": {
-        "Authorization": "Bearer ${JOB_API_TOKEN}"
-      },
-      "arrayPath": "jobs",
-      "fieldMap": {
-        "company": "company.name",
-        "title": "title",
-        "location": "location",
-        "workMode": "workMode",
-        "applyUrl": "applyUrl",
-        "postedAt": "postedAt",
-        "description": [
-          "description",
-          "requirements"
-        ]
-      }
-    },
-    {
-      "id": "linkedin-official",
-      "name": "LinkedIn official APIs",
-      "type": "disabled",
-      "enabled": false,
-      "status": "requires_partner_approval",
-      "reason": "LinkedIn official Talent/Job Posting APIs are mainly for approved ATS/job-posting integrations, not a simple public candidate job-search API."
-    },
-    {
-      "id": "alljobs",
-      "name": "AllJobs",
-      "type": "disabled",
-      "enabled": false,
-      "status": "no_public_api_documented",
-      "reason": "No public official jobs API documentation was found. Connect only through an approved API/feed/export or a compliant integration path."
-    },
-    {
-      "id": "drushim",
-      "name": "Drushim IL",
-      "type": "disabled",
-      "enabled": false,
-      "status": "no_public_api_documented",
-      "reason": "No public official jobs API documentation was found. Connect only through an approved API/feed/export or a compliant integration path."
     }
   ]
 }
