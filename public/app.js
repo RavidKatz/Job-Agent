@@ -14,6 +14,8 @@ const termCount = document.querySelector("#termCount");
 const generatedAt = document.querySelector("#generatedAt");
 const resultsBody = document.querySelector("#resultsBody");
 const sourceLinks = document.querySelector("#sourceLinks");
+const profileSummary = document.querySelector("#profileSummary");
+const roleRecommendations = document.querySelector("#roleRecommendations");
 
 let latestCsv = "";
 
@@ -48,6 +50,7 @@ function renderMatches(analysis) {
   matchCount.textContent = analysis.matches?.length ?? 0;
   termCount.textContent = analysis.resumeTerms?.length ?? 0;
   generatedAt.textContent = analysis.generatedAt ? formatDate(analysis.generatedAt) : "";
+  renderProfile(analysis.resumeProfile);
   renderSourceLinks(analysis.sourceLinks ?? []);
 
   if (!analysis.matches?.length) {
@@ -64,6 +67,37 @@ function renderMatches(analysis) {
       <td class="notes">${escapeHtml(match.notes || match.warnings || "")}</td>
       <td>${renderApplyAction(match)}</td>
     </tr>
+  `).join("");
+}
+
+function renderProfile(profile) {
+  if (!profile) {
+    profileSummary.textContent = "המערכת תנתח את קורות החיים לאחר הסריקה";
+    roleRecommendations.innerHTML = "";
+    return;
+  }
+
+  const yearsText = profile.yearsExperience == null
+    ? "לא זוהו שנות ניסיון מדויקות"
+    : `${profile.yearsExperience} שנות ניסיון`;
+  const terms = (profile.matchedTerms ?? []).slice(0, 8).join(", ");
+  profileSummary.textContent = `${yearsText}. רמת ניסיון: ${profile.seniority}. כישורים שזוהו: ${terms || "אין עדיין כישורים מזוהים"}.`;
+
+  const roles = profile.roleRecommendations ?? [];
+  if (!roles.length) {
+    roleRecommendations.innerHTML = `<span class="empty-state inline">לא נמצאו המלצות תפקיד מובהקות</span>`;
+    return;
+  }
+
+  roleRecommendations.innerHTML = roles.map((role) => `
+    <article class="role-card">
+      <div class="role-card-head">
+        <strong>${escapeHtml(role.title)}</strong>
+        <span>${role.score}%</span>
+      </div>
+      <p>${escapeHtml((role.reasons ?? []).join(" | "))}</p>
+      <small>${escapeHtml((role.searchTerms ?? []).slice(0, 3).join(", "))}</small>
+    </article>
   `).join("");
 }
 

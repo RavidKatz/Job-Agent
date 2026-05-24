@@ -3,7 +3,8 @@ import fs from "node:fs/promises";
 import http from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { analyzeJobs, loadConfig, loadJobs } from "./src/pipeline.mjs";
+import { analyzeJobsWithProfile, loadConfig, loadJobs } from "./src/pipeline.mjs";
+import { buildResumeProfile } from "./src/profile.mjs";
 import { toCsv } from "./src/io.mjs";
 import { parseMultipart, readRequestBody } from "./src/server/multipart.mjs";
 import { serveStatic } from "./src/server/static.mjs";
@@ -97,13 +98,17 @@ async function handleMatch(request, response) {
     return;
   }
 
+  const resumeProfile = buildResumeProfile(resumeText, config);
   const uploadedJobs = parseJobsPayload(fields, files);
   const sourceResult = uploadedJobs
     ? { jobs: uploadedJobs, notices: ["Using uploaded jobs JSON."], sourceLinks: [] }
-    : await loadJobs(rootDir, { sourcesPath: "config/sources.json" });
+    : await loadJobs(rootDir, {
+        sourcesPath: "config/sources.json",
+        searchTerms: resumeProfile.dynamicSearchTerms
+      });
 
-  const analysis = analyzeJobs({
-    resumeText,
+  const analysis = analyzeJobsWithProfile({
+    resumeProfile,
     jobs: sourceResult.jobs,
     config,
     sourceNotices: sourceResult.notices,

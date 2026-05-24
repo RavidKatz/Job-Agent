@@ -1,6 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { analyzeJobs, loadConfig, loadJobs, loadResumeFromFile, writeAnalysis } from "./src/pipeline.mjs";
+import { analyzeJobsWithProfile, loadConfig, loadJobs, loadResumeFromFile, writeAnalysis } from "./src/pipeline.mjs";
+import { buildResumeProfile } from "./src/profile.mjs";
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 
@@ -31,9 +32,14 @@ function parseArgs(argv) {
 const args = parseArgs(process.argv.slice(2));
 const config = await loadConfig(rootDir, args.config);
 const resumeText = await loadResumeFromFile(rootDir, args.resume);
-const sourceResult = await loadJobs(rootDir, { jobsPath: args.jobs, sourcesPath: args.sources });
-const analysis = analyzeJobs({
-  resumeText,
+const resumeProfile = buildResumeProfile(resumeText, config);
+const sourceResult = await loadJobs(rootDir, {
+  jobsPath: args.jobs,
+  sourcesPath: args.sources,
+  searchTerms: resumeProfile.dynamicSearchTerms
+});
+const analysis = analyzeJobsWithProfile({
+  resumeProfile,
   jobs: sourceResult.jobs,
   config,
   sourceNotices: sourceResult.notices,
@@ -43,6 +49,7 @@ const analysis = analyzeJobs({
 await writeAnalysis(rootDir, analysis, { outJson: args.outJson, outCsv: args.outCsv });
 
 console.log(`Resume terms: ${analysis.resumeTerms.join(", ") || "none"}`);
+console.log(`Suggested roles: ${analysis.resumeProfile.roleRecommendations.map((role) => role.title).join(", ") || "none"}`);
 console.log(`Jobs scanned: ${analysis.jobsScanned}`);
 console.log(`Matches >= ${analysis.minimumScore}%: ${analysis.matches.length}`);
 for (const notice of analysis.sourceNotices) {

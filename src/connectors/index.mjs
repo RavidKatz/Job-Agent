@@ -10,9 +10,19 @@ export function resolveLocal(filePath, rootDir) {
   return path.isAbsolute(filePath) ? filePath : path.join(rootDir, filePath);
 }
 
-export async function loadJobsFromSources({ rootDir, sourcesPath }) {
+export async function loadJobsFromSources({ rootDir, sourcesPath, searchTerms = [] }) {
   const config = await readJson(resolveLocal(sourcesPath, rootDir));
-  const sources = config.sources ?? [];
+  const sources = (config.sources ?? []).map((source) => {
+    if (!searchTerms.length || source.useProfileSearchTerms === false) {
+      return source;
+    }
+
+    if (["remotive", "himalayas", "searchPage"].includes(source.type)) {
+      return { ...source, searchTerms };
+    }
+
+    return source;
+  });
   const enabledSources = sources.filter((source) => source.enabled);
   const disabledSources = sources.filter((source) => !source.enabled);
   const jobs = [];

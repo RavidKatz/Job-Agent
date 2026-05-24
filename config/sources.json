@@ -5,6 +5,7 @@
       "name": "Remotive",
       "type": "remotive",
       "enabled": true,
+      "useProfileSearchTerms": true,
       "maxQueries": 2,
       "limit": 20,
       "searchTerms": [
@@ -19,6 +20,7 @@
       "name": "Himalayas",
       "type": "himalayas",
       "enabled": true,
+      "useProfileSearchTerms": true,
       "maxQueries": 2,
       "searchTerms": [
         "project manager",
@@ -32,6 +34,7 @@
       "name": "LinkedIn",
       "type": "searchPage",
       "enabled": true,
+      "useProfileSearchTerms": true,
       "maxQueries": 4,
       "urlTemplate": "https://www.linkedin.com/jobs/search/?keywords={queryEncoded}&location=Israel",
       "searchTerms": [
@@ -47,6 +50,7 @@
       "name": "AllJobs",
       "type": "searchPage",
       "enabled": true,
+      "useProfileSearchTerms": true,
       "maxQueries": 4,
       "urlTemplate": "https://www.alljobs.co.il/SearchResultsGuest.aspx?keyWord={queryEncoded}",
       "searchTerms": [
@@ -62,6 +66,7 @@
       "name": "Drushim",
       "type": "searchPage",
       "enabled": true,
+      "useProfileSearchTerms": true,
       "maxQueries": 4,
       "urlTemplate": "https://www.drushim.co.il/jobs/search/{queryEncoded}/",
       "searchTerms": [
