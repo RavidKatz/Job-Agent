@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>סוכן התאמת משרות</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="hero-panel">
+        <div>
+          <p class="eyebrow">Job Agent</p>
+          <h1>התאמת משרות חכמה לפי קורות חיים</h1>
+        </div>
+        <div class="score-control" aria-label="סף התאמה">
+          <label for="minimumScore">סף התאמה</label>
+          <div class="range-row">
+            <input id="minimumScore" type="range" min="50" max="95" value="75">
+            <output id="minimumScoreValue" for="minimumScore">75%</output>
+          </div>
+        </div>
+      </section>
+
+      <section class="workspace-grid">
+        <form id="matchForm" class="upload-panel">
+          <label class="drop-zone" for="resumeFile">
+            <span class="drop-title">קורות חיים</span>
+            <span id="resumeFileName" class="drop-meta">PDF, DOCX או TXT</span>
+            <input id="resumeFile" name="resume" type="file" accept=".pdf,.docx,.txt,.md" required>
+          </label>
+
+          <label class="drop-zone secondary" for="jobsFile">
+            <span class="drop-title">משרות לבדיקה</span>
+            <span id="jobsFileName" class="drop-meta">אופציונלי: JSON</span>
+            <input id="jobsFile" name="jobsFile" type="file" accept=".json">
+          </label>
+
+          <div class="actions-row">
+            <button id="scanButton" type="submit">סרוק התאמות</button>
+            <button id="exportButton" type="button" disabled>ייצוא CSV</button>
+          </div>
+        </form>
+
+        <aside class="summary-panel" aria-live="polite">
+          <div class="metric">
+            <span>נסרקו</span>
+            <strong id="jobsScanned">0</strong>
+          </div>
+          <div class="metric">
+            <span>התאמות</span>
+            <strong id="matchCount">0</strong>
+          </div>
+          <div class="metric">
+            <span>מילות מפתח</span>
+            <strong id="termCount">0</strong>
+          </div>
+          <p id="statusText" class="status-text">מוכן לסריקה</p>
+        </aside>
+      </section>
+
+      <section class="results-shell">
+        <div class="results-heading">
+          <h2>משרות רלוונטיות</h2>
+          <span id="generatedAt"></span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>התאמה</th>
+                <th>חברה</th>
+                <th>תפקיד</th>
+                <th>מיקום</th>
+                <th>למה מתאים</th>
+                <th>הגשה</th>
+              </tr>
+            </thead>
+            <tbody id="resultsBody">
+              <tr>
+                <td colspan="6" class="empty-state">אין תוצאות עדיין</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,58 @@
+{
+  "sources": [
+    {
+      "id": "manual-sample",
+      "name": "Manual sample jobs",
+      "type": "file",
+      "enabled": true,
+      "path": "data/jobs.sample.json"
+    },
+    {
+      "id": "custom-json-api",
+      "name": "Custom JSON jobs API",
+      "type": "jsonApi",
+      "enabled": false,
+      "url": "https://api.example.com/jobs?q=PMO&location=Israel",
+      "headers": {
+        "Authorization": "Bearer ${JOB_API_TOKEN}"
+      },
+      "arrayPath": "jobs",
+      "fieldMap": {
+        "company": "company.name",
+        "title": "title",
+        "location": "location",
+        "workMode": "workMode",
+        "applyUrl": "applyUrl",
+        "postedAt": "postedAt",
+        "description": [
+          "description",
+          "requirements"
+        ]
+      }
+    },
+    {
+      "id": "linkedin-official",
+      "name": "LinkedIn official APIs",
+      "type": "disabled",
+      "enabled": false,
+      "status": "requires_partner_approval",
+      "reason": "LinkedIn official Talent/Job Posting APIs are mainly for approved ATS/job-posting integrations, not a simple public candidate job-search API."
+    },
+    {
+      "id": "alljobs",
+      "name": "AllJobs",
+      "type": "disabled",
+      "enabled": false,
+      "status": "no_public_api_documented",
+      "reason": "No public official jobs API documentation was found. Connect only through an approved API/feed/export or a compliant integration path."
+    },
+    {
+      "id": "drushim",
+      "name": "Drushim IL",
+      "type": "disabled",
+      "enabled": false,
+      "status": "no_public_api_documented",
+      "reason": "No public official jobs API documentation was found. Connect only through an approved API/feed/export or a compliant integration path."
+    }
+  ]
+}

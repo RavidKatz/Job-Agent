@@ -1,0 +1,78 @@
+{
+  "minimumScore": 75,
+  "targetRoles": [
+    "AI Solution Manager",
+    "AI Project Manager",
+    "PMO",
+    "Digital Project Manager",
+    "CRM Project Manager",
+    "Systems Implementer",
+    "Business Applications Manager",
+    "Product Operations"
+  ],
+  "preferredLocations": [
+    "Israel",
+    "Tel Aviv",
+    "Ramat Gan",
+    "Petah Tikva",
+    "Herzliya",
+    "Haifa",
+    "Remote",
+    "Hybrid"
+  ],
+  "preferredWorkModes": [
+    "Hybrid",
+    "Remote",
+    "On-site"
+  ],
+  "coreSkills": [
+    "AI",
+    "PMO",
+    "Project Management",
+    "Process Improvement",
+    "CRM",
+    "API",
+    "Digital Projects",
+    "Systems Implementation",
+    "Industrial Engineering",
+    "Operations",
+    "QA",
+    "Stakeholder Management",
+    "Data Analysis",
+    "SQL",
+    "Excel",
+    "Monday",
+    "Jira"
+  ],
+  "domainKeywords": [
+    "fintech",
+    "insurance",
+    "healthcare",
+    "manufacturing",
+    "SaaS",
+    "enterprise systems",
+    "customer operations",
+    "automation"
+  ],
+  "avoidKeywords": [
+    "senior developer",
+    "software engineer",
+    "hands-on coding",
+    "sales only",
+    "commission only",
+    "internship"
+  ],
+  "seniority": {
+    "preferred": [
+      "mid",
+      "senior",
+      "lead"
+    ],
+    "avoid": [
+      "junior",
+      "intern",
+      "director",
+      "vp"
+    ]
+  }
+}

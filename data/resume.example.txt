@@ -1,0 +1,7 @@
+Replace this file with the candidate resume text.
+
+Example profile:
+Industrial Engineering background with experience in PMO, project coordination,
+AI-related process improvement, CRM and digital projects, API coordination,
+systems implementation, QA processes, stakeholder management, operations,
+Excel, SQL, Jira and Monday.

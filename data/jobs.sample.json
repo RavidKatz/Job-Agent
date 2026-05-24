@@ -1,0 +1,32 @@
+[
+  {
+    "company": "Matrix",
+    "title": "Digital Projects & Loyalty PMO",
+    "location": "Israel, Hybrid",
+    "workMode": "Hybrid",
+    "source": "Manual sample",
+    "applyUrl": "https://example.com/apply/matrix-digital-pmo",
+    "postedAt": "2026-05-24",
+    "description": "PMO role for digital projects, CRM, loyalty, APIs, stakeholder coordination, process tracking, Excel dashboards and cross-functional delivery."
+  },
+  {
+    "company": "Example SaaS",
+    "title": "AI Project Manager",
+    "location": "Tel Aviv, Hybrid",
+    "workMode": "Hybrid",
+    "source": "Manual sample",
+    "applyUrl": "https://example.com/apply/ai-project-manager",
+    "postedAt": "2026-05-24",
+    "description": "Lead AI automation projects, gather requirements, manage delivery plans, coordinate product, data and operations teams, improve processes and report progress."
+  },
+  {
+    "company": "Code Factory",
+    "title": "Senior Backend Developer",
+    "location": "Remote",
+    "workMode": "Remote",
+    "source": "Manual sample",
+    "applyUrl": "https://example.com/apply/backend",
+    "postedAt": "2026-05-24",
+    "description": "Hands-on coding role requiring deep Node.js, distributed systems, backend architecture and production software engineering ownership."
+  }
+]
