@@ -6,7 +6,7 @@ if (-not (Test-Path $Node)) {
 
 Write-Host ""
 Write-Host "Starting Job Agent..."
-Write-Host "Open this URL in your browser: http://localhost:4317"
+Write-Host "Open this URL in your browser: http://127.0.0.1:4317"
 Write-Host "Keep this terminal open while using the app."
 Write-Host ""
 

@@ -20,7 +20,13 @@ code C:\Users\רביד\Documents\Codex\2026-05-24\new-chat\job-agent
 האפליקציה המקומית תעלה בכתובת:
 
 ```text
-http://localhost:4317
+http://127.0.0.1:4317
+```
+
+אפשר גם להפעיל ולפתוח אוטומטית:
+
+```powershell
+.\open-app.ps1
 ```
 
 אפשר גם להריץ דרך VS Code:
@@ -47,6 +53,12 @@ Terminal > Run Task > Start Job Agent
 
 ```powershell
 .\start.ps1
+```
+
+פתיחה אוטומטית:
+
+```powershell
+.\open-app.ps1
 ```
 
 CLI:
