@@ -1,6 +1,22 @@
 {
   "sources": [
     {
+      "id": "hiremetech",
+      "name": "HireMeTech",
+      "type": "hiremetech",
+      "enabled": true,
+      "useProfileSearchTerms": true,
+      "maxQueries": 6,
+      "limit": 20,
+      "country": "Israel",
+      "searchTerms": [
+        "AI Project Manager",
+        "PMO",
+        "Digital Project Manager",
+        "Business Applications Manager"
+      ]
+    },
+    {
       "id": "remotive",
       "name": "Remotive",
       "type": "remotive",

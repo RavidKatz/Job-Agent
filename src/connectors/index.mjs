@@ -1,6 +1,7 @@
 import path from "node:path";
 import { readJson } from "../io.mjs";
 import { loadFileJobs } from "./file.mjs";
+import { loadHireMeTechJobs } from "./hiremetech.mjs";
 import { loadHimalayasJobs } from "./himalayas.mjs";
 import { loadJsonApiJobs } from "./json-api.mjs";
 import { loadRemotiveJobs } from "./remotive.mjs";
@@ -17,7 +18,7 @@ export async function loadJobsFromSources({ rootDir, sourcesPath, searchTerms = 
       return source;
     }
 
-    if (["remotive", "himalayas", "searchPage"].includes(source.type)) {
+    if (["remotive", "himalayas", "hiremetech", "searchPage"].includes(source.type)) {
       return { ...source, searchTerms };
     }
 
@@ -39,6 +40,8 @@ export async function loadJobsFromSources({ rootDir, sourcesPath, searchTerms = 
         jobs.push(...await loadRemotiveJobs(source));
       } else if (source.type === "himalayas") {
         jobs.push(...await loadHimalayasJobs(source));
+      } else if (source.type === "hiremetech") {
+        jobs.push(...await loadHireMeTechJobs(source));
       } else if (source.type === "searchPage") {
         sourceLinks.push(...buildSearchPageLinks(source));
       } else {

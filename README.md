@@ -45,7 +45,7 @@ Terminal > Run Task > Start Job Agent
 - שרת מקומי: `server.mjs`
 - חילוץ טקסט מ-PDF/DOCX/TXT: `scripts/extract_resume.py`
 - ניתוח פרופיל והמלצת סוגי משרות: `src/role-recommender.mjs`
-- מחברי משרות פתוחים: `src/connectors/remotive.mjs`, `src/connectors/himalayas.mjs`
+- מחברי משרות פתוחים: `src/connectors/remotive.mjs`, `src/connectors/himalayas.mjs`, `src/connectors/hiremetech.mjs`
 - מנוע דירוג התאמה: `src/matcher.mjs`
 - יצוא תוצאות ל-JSON ול-CSV: `outputs/matches.json`, `outputs/matches.csv`
 
@@ -135,6 +135,7 @@ CLI:
 מקור מסוג `jsonApi` קורא API שמחזיר JSON וממפה שדות למבנה אחיד של משרה.
 מקור מסוג `remotive` מחפש משרות מרחוק דרך API פתוח.
 מקור מסוג `himalayas` מחפש משרות מרחוק דרך API פתוח.
+מקור מסוג `hiremetech` מחפש משרות בישראל דרך מקור הנתונים של HireMeTech.
 מקור מסוג `searchPage` יוצר קישורי חיפוש מדויקים לאתרים שאין להם API ציבורי פתוח.
 
 דוגמה ל-API:
@@ -179,5 +180,6 @@ $env:JOB_API_TOKEN = "your-token"
 - `Drushim`: לא נמצא תיעוד API ציבורי רשמי. צריך API/Feed מאושר, יצוא נתונים, או אישור אינטגרציה.
 - `Remotive`: מחובר כמקור API פתוח למשרות מרחוק.
 - `Himalayas`: מחובר כמקור API פתוח למשרות מרחוק.
+- `HireMeTech`: מחובר כמקור משרות בישראל עם קישורים ישירים לעמודי המשרה.
 
 המערכת מוכנה לקלוט כל מקור חוקי שמחזיר JSON, גם אם הוא מגיע מספק חיצוני, Feed של חברה, או יצוא מאתר משרות.
