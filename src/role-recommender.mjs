@@ -3,7 +3,7 @@ import { includesPhrase, normalizeText, uniqueSorted } from "./text.mjs";
 const ROLE_FAMILIES = [
   {
     id: "ai-project-management",
-    title: "ניהול פרויקטי בינה מלאכותית",
+    title: "AI project management",
     searchTerms: [
       "AI Project Manager",
       "AI Program Manager",
@@ -19,13 +19,13 @@ const ROLE_FAMILIES = [
       "process improvement"
     ],
     reasons: [
-      "שילוב בין ניהול פרויקטים, תהליכים ואוטומציה",
-      "מתאים לפרופיל שמחבר בין צורך עסקי לביצוע טכנולוגי"
+      "Combines project delivery, process thinking, and automation",
+      "Fits profiles that translate business needs into technical execution"
     ]
   },
   {
     id: "pmo",
-    title: "ניהול תהליכים ו־PMO",
+    title: "PMO and process management",
     searchTerms: [
       "PMO",
       "Project Coordinator",
@@ -42,13 +42,13 @@ const ROLE_FAMILIES = [
       "stakeholder"
     ],
     reasons: [
-      "מתאים לניסיון במעקב, תיאום, דוחות וניהול תהליכים",
-      "מתאים לעבודה מול ממשקים רבים בארגון"
+      "Matches experience in tracking, coordination, reporting, and process control",
+      "Works well for cross-functional stakeholder environments"
     ]
   },
   {
     id: "business-applications",
-    title: "יישום וניהול מערכות עסקיות",
+    title: "Business applications and implementation",
     searchTerms: [
       "Business Applications Manager",
       "Systems Implementer",
@@ -65,13 +65,13 @@ const ROLE_FAMILIES = [
       "implementation"
     ],
     reasons: [
-      "מתאים לפרופיל שמבין גם תהליך עסקי וגם מערכת",
-      "מתאים לתפקידי יישום, אפיון והטמעה"
+      "Fits profiles that understand both business processes and systems",
+      "Relevant for implementation, requirements, and rollout roles"
     ]
   },
   {
     id: "digital-projects",
-    title: "ניהול פרויקטים דיגיטליים",
+    title: "Digital project management",
     searchTerms: [
       "Digital Project Manager",
       "Digital Operations Manager",
@@ -88,13 +88,13 @@ const ROLE_FAMILIES = [
       "process"
     ],
     reasons: [
-      "מתאים לפרופיל עם חיבור בין שירות, מוצר, מערכות ותפעול",
-      "מתאים לפרויקטים דיגיטליים חוצי ארגון"
+      "Connects service, product, systems, and operations work",
+      "Fits cross-functional digital delivery environments"
     ]
   },
   {
     id: "operations",
-    title: "תפעול ושיפור תהליכים",
+    title: "Operations and process improvement",
     searchTerms: [
       "Operations Manager",
       "Operations Project Manager",
@@ -111,13 +111,13 @@ const ROLE_FAMILIES = [
       "workflow"
     ],
     reasons: [
-      "מתאים לפרופיל אנליטי עם חשיבה תהליכית",
-      "מתאים לתפקידי שיפור, בקרה ותפעול"
+      "Fits analytical profiles with process-oriented thinking",
+      "Relevant for improvement, control, and operational execution"
     ]
   },
   {
     id: "product-operations",
-    title: "תפעול מוצר",
+    title: "Product operations",
     searchTerms: [
       "Product Operations",
       "Product Operations Manager",
@@ -134,8 +134,8 @@ const ROLE_FAMILIES = [
       "CRM"
     ],
     reasons: [
-      "מתאים לפרופיל שמחבר בין משתמשים, דאטה ותהליכי מוצר",
-      "מתאים לסביבה טכנולוגית שאינה דורשת להיות מפתח"
+      "Connects users, data, and product workflows",
+      "Fits technical environments without requiring a developer role"
     ]
   }
 ];
@@ -163,11 +163,11 @@ export function inferYearsExperience(text) {
 }
 
 export function inferSeniority(yearsExperience) {
-  if (yearsExperience == null) return "לא זוהתה רמת ניסיון מדויקת";
-  if (yearsExperience < 2) return "תחילת קריירה";
-  if (yearsExperience < 5) return "ביניים";
-  if (yearsExperience < 9) return "מנוסה";
-  return "בכיר";
+  if (yearsExperience == null) return "Not explicitly detected";
+  if (yearsExperience < 2) return "Early career";
+  if (yearsExperience < 5) return "Mid-level";
+  if (yearsExperience < 9) return "Experienced";
+  return "Senior";
 }
 
 export function recommendRoles(resumeText, config) {

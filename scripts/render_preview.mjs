@@ -7,10 +7,14 @@ import { fileURLToPath } from "node:url";
 const rootDir = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const publicDir = path.join(rootDir, "public");
 const outputDir = path.join(rootDir, "outputs");
-const outputPath = path.join(outputDir, "ui-preview.png");
-const tempOutputPath = path.join(process.env.TEMP ?? outputDir, "job-agent-ui-preview.png");
-const edgeProfileDir = path.join(process.env.TEMP ?? outputDir, "job-agent-edge-profile");
+const outputName = process.env.PREVIEW_OUTPUT || "ui-preview.png";
+const outputPath = path.isAbsolute(outputName) ? outputName : path.join(outputDir, outputName);
+const tempOutputPath = path.join(process.env.TEMP ?? outputDir, `job-agent-${path.basename(outputName)}`);
+const previewRunId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+const edgeProfileDir = path.join(process.env.TEMP ?? outputDir, `job-agent-edge-profile-${previewRunId}`);
 const edgePath = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
+const previewWidth = process.env.PREVIEW_WIDTH || "1440";
+const previewHeight = process.env.PREVIEW_HEIGHT || "1100";
 
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
@@ -31,7 +35,10 @@ function serveStatic() {
 
     try {
       const data = await fs.readFile(filePath);
-      response.writeHead(200, { "Content-Type": mimeTypes[path.extname(filePath)] ?? "application/octet-stream" });
+      response.writeHead(200, {
+        "Content-Type": mimeTypes[path.extname(filePath)] ?? "application/octet-stream",
+        "Cache-Control": "no-store"
+      });
       response.end(data);
     } catch {
       response.writeHead(404);
@@ -53,7 +60,7 @@ try {
       "--disable-dev-shm-usage",
       "--hide-scrollbars",
       `--user-data-dir=${edgeProfileDir}`,
-      "--window-size=1440,1100",
+      `--window-size=${previewWidth},${previewHeight}`,
       "--virtual-time-budget=1500",
       `--screenshot=${tempOutputPath}`,
       "http://127.0.0.1:4381/"
@@ -69,4 +76,5 @@ try {
   console.log(outputPath);
 } finally {
   await new Promise((resolve) => server.close(resolve));
+  await fs.rm(edgeProfileDir, { recursive: true, force: true });
 }

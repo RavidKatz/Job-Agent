@@ -27,6 +27,7 @@ export async function loadHireMeTechJobs(source) {
   const maxQueries = source.maxQueries ?? 4;
   const limit = source.limit ?? 20;
   const jobs = [];
+  const failures = [];
 
   for (const term of terms.slice(0, maxQueries)) {
     const url = new URL("https://hiremetech.com/api/jobs/search");
@@ -38,7 +39,14 @@ export async function loadHireMeTechJobs(source) {
     url.searchParams.set("country", source.country ?? "Israel");
     url.searchParams.set("title", term);
 
-    const payload = await fetchJson(url, source.id);
+    let payload;
+    try {
+      payload = await fetchJson(url, source.id);
+    } catch (error) {
+      failures.push(`${term}: ${error.message}`);
+      continue;
+    }
+
     for (const job of payload.jobs ?? []) {
       jobs.push({
         company: job.company_name || job.company?.name || "",
@@ -71,6 +79,10 @@ export async function loadHireMeTechJobs(source) {
         ].filter(Boolean)
       });
     }
+  }
+
+  if (!jobs.length && failures.length) {
+    throw new Error(failures.slice(0, 3).join(" | "));
   }
 
   return jobs;

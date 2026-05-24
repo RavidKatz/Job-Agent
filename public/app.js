@@ -26,10 +26,10 @@ function isRealApplyUrl(value) {
 
 function renderApplyAction(match) {
   if (!isRealApplyUrl(match.applyUrl)) {
-    return `<span class="muted-action">דוגמה בלבד</span>`;
+    return `<span class="muted-action">No direct link</span>`;
   }
 
-  return `<a class="apply-link" href="${escapeAttribute(match.applyUrl)}" target="_blank" rel="noreferrer">פתח</a>`;
+  return `<a class="apply-link" href="${escapeAttribute(match.applyUrl)}" target="_blank" rel="noreferrer">Open role</a>`;
 }
 
 function setStatus(text, isError = false) {
@@ -39,7 +39,7 @@ function setStatus(text, isError = false) {
 
 function formatDate(value) {
   if (!value) return "";
-  return new Intl.DateTimeFormat("he-IL", {
+  return new Intl.DateTimeFormat("en-US", {
     dateStyle: "short",
     timeStyle: "short"
   }).format(new Date(value));
@@ -54,7 +54,7 @@ function renderMatches(analysis) {
   renderSourceLinks(analysis.sourceLinks ?? []);
 
   if (!analysis.matches?.length) {
-    resultsBody.innerHTML = `<tr><td colspan="6" class="empty-state">לא נמצאו משרות מעל הסף הנוכחי</td></tr>`;
+    resultsBody.innerHTML = `<tr><td colspan="6" class="empty-state">No roles passed the current match threshold</td></tr>`;
     return;
   }
 
@@ -72,20 +72,20 @@ function renderMatches(analysis) {
 
 function renderProfile(profile) {
   if (!profile) {
-    profileSummary.textContent = "המערכת תנתח את קורות החיים לאחר הסריקה";
+    profileSummary.textContent = "The resume profile will appear after the scan.";
     roleRecommendations.innerHTML = "";
     return;
   }
 
   const yearsText = profile.yearsExperience == null
-    ? "לא זוהו שנות ניסיון מדויקות"
-    : `${profile.yearsExperience} שנות ניסיון`;
+    ? "No explicit years of experience detected"
+    : `${profile.yearsExperience} years of experience`;
   const terms = (profile.matchedTerms ?? []).slice(0, 8).join(", ");
-  profileSummary.textContent = `${yearsText}. רמת ניסיון: ${profile.seniority}. כישורים שזוהו: ${terms || "אין עדיין כישורים מזוהים"}.`;
+  profileSummary.textContent = `${yearsText}. Seniority: ${profile.seniority}. Detected signals: ${terms || "No strong signals detected yet"}.`;
 
   const roles = profile.roleRecommendations ?? [];
   if (!roles.length) {
-    roleRecommendations.innerHTML = `<span class="empty-state inline">לא נמצאו המלצות תפקיד מובהקות</span>`;
+    roleRecommendations.innerHTML = `<span class="empty-state inline">No strong role recommendations detected</span>`;
     return;
   }
 
@@ -103,7 +103,7 @@ function renderProfile(profile) {
 
 function renderSourceLinks(links) {
   if (!links.length) {
-    sourceLinks.innerHTML = `<span class="empty-state inline">אין קישורי חיפוש עדיין</span>`;
+    sourceLinks.innerHTML = `<span class="empty-state inline">No search shortcuts yet</span>`;
     return;
   }
 
@@ -128,8 +128,8 @@ function escapeAttribute(value) {
 }
 
 function updateFileLabels() {
-  resumeFileName.textContent = resumeFile.files[0]?.name || "PDF, DOCX או TXT";
-  jobsFileName.textContent = jobsFile.files[0]?.name || "אופציונלי: JSON";
+  resumeFileName.textContent = resumeFile.files[0]?.name || "PDF, DOCX, TXT, or MD";
+  jobsFileName.textContent = jobsFile.files[0]?.name || "Optional JSON file";
 }
 
 minimumScore.addEventListener("input", () => {
@@ -141,7 +141,7 @@ jobsFile.addEventListener("change", updateFileLabels);
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
-  setStatus("סורק התאמות...");
+  setStatus("Scanning role fit...");
   scanButton.disabled = true;
   exportButton.disabled = true;
 
@@ -160,13 +160,13 @@ form.addEventListener("submit", async (event) => {
     const payload = await response.json();
 
     if (!response.ok) {
-      throw new Error(payload.error || "הסריקה נכשלה");
+      throw new Error(payload.error || "The scan failed");
     }
 
     latestCsv = payload.csv || "";
     renderMatches(payload);
     exportButton.disabled = !latestCsv;
-    setStatus(payload.sourceNotices?.[0] || "הסריקה הושלמה");
+    setStatus(payload.sourceNotices?.[0] || "Scan complete");
   } catch (error) {
     setStatus(error.message, true);
   } finally {

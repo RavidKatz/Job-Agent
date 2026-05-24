@@ -1,92 +1,169 @@
 <!doctype html>
-<html lang="he" dir="rtl">
+<html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>סוכן התאמת משרות</title>
+    <title>Job Agent</title>
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
     <main class="app-shell">
-      <section class="hero-panel">
-        <div>
-          <p class="eyebrow">Job Agent</p>
-          <h1>התאמת משרות חכמה לפי קורות חיים</h1>
+      <header class="topbar">
+        <a class="brand-mark" href="/" aria-label="Job Agent home">
+          <span class="brand-glyph">JA</span>
+          <span>
+            <strong>Job Agent</strong>
+            <small>Resume intelligence workspace</small>
+          </span>
+        </a>
+        <div class="topbar-meta">
+          <span>Live sources</span>
+          <strong>HireMeTech, Remotive, Himalayas</strong>
         </div>
-        <div class="score-control" aria-label="סף התאמה">
-          <label for="minimumScore">סף התאמה</label>
-          <div class="range-row">
-            <input id="minimumScore" type="range" min="50" max="95" value="75">
-            <output id="minimumScoreValue" for="minimumScore">75%</output>
+      </header>
+
+      <section class="command-center">
+        <div class="hero-copy">
+          <p class="eyebrow">Resume-first matching</p>
+          <h1>Find roles that fit the person behind the resume.</h1>
+          <p class="hero-subtitle">
+            Upload a resume, infer the strongest role directions, scan live job sources, and rank opportunities by fit.
+          </p>
+          <div class="hero-actions">
+            <a class="primary-link" href="#matchForm">Start a scan</a>
+            <span class="signal-line">Profile signals, source coverage, and direct application links in one workspace.</span>
+          </div>
+          <div class="hero-stats" aria-label="Matching workflow highlights">
+            <span><strong>75%+</strong> fit threshold</span>
+            <span><strong>3</strong> live sources</span>
+            <span><strong>Fast</strong> CSV export</span>
+          </div>
+        </div>
+
+        <div class="hero-visual" aria-label="Matching engine preview">
+          <div class="visual-card score-card">
+            <div class="visual-card-head">
+              <span>Fit engine</span>
+              <strong>Live</strong>
+            </div>
+            <div class="score-orbit">
+              <span>92%</span>
+              <small>best match preview</small>
+            </div>
+            <div class="match-bars" aria-hidden="true">
+              <span style="--bar: 92%"></span>
+              <span style="--bar: 84%"></span>
+              <span style="--bar: 78%"></span>
+            </div>
+            <div class="score-control" aria-label="Match threshold">
+              <label for="minimumScore">Match threshold</label>
+              <div class="range-row">
+                <input id="minimumScore" type="range" min="50" max="95" value="75">
+                <output id="minimumScoreValue" for="minimumScore">75%</output>
+              </div>
+              <p>Only roles above this score appear in the shortlist.</p>
+            </div>
+          </div>
+          <div class="visual-card pipeline-card">
+            <div class="visual-card-head">
+              <span>Source pipeline</span>
+              <strong>Israel</strong>
+            </div>
+            <div class="pipeline-list">
+              <span>HireMeTech</span>
+              <span>Remotive</span>
+              <span>Himalayas</span>
+              <span>LinkedIn search</span>
+            </div>
+            <p>Every match keeps its original apply link when the source provides one.</p>
           </div>
         </div>
       </section>
 
       <section class="workspace-grid">
         <form id="matchForm" class="upload-panel">
+          <div class="panel-heading">
+            <span>01</span>
+            <div>
+              <h2>Scan a candidate profile</h2>
+              <p>Use a resume file and optional custom job data.</p>
+            </div>
+          </div>
+
           <label class="drop-zone" for="resumeFile">
-            <span class="drop-title">קורות חיים</span>
-            <span id="resumeFileName" class="drop-meta">PDF, DOCX או TXT</span>
+            <span class="drop-title">Resume file</span>
+            <span id="resumeFileName" class="drop-meta">PDF, DOCX, TXT, or MD</span>
             <input id="resumeFile" name="resume" type="file" accept=".pdf,.docx,.txt,.md" required>
           </label>
 
           <label class="drop-zone secondary" for="jobsFile">
-            <span class="drop-title">משרות לבדיקה</span>
-            <span id="jobsFileName" class="drop-meta">אופציונלי: JSON</span>
+            <span class="drop-title">Custom jobs</span>
+            <span id="jobsFileName" class="drop-meta">Optional JSON file</span>
             <input id="jobsFile" name="jobsFile" type="file" accept=".json">
           </label>
 
           <div class="actions-row">
-            <button id="scanButton" type="submit">סרוק התאמות</button>
-            <button id="exportButton" type="button" disabled>ייצוא CSV</button>
+            <button id="scanButton" type="submit">Run match scan</button>
+            <button id="exportButton" type="button" disabled>Export CSV</button>
           </div>
         </form>
 
         <aside class="summary-panel" aria-live="polite">
+          <div class="panel-heading compact">
+            <span>02</span>
+            <div>
+              <h2>Search output</h2>
+              <p>Live summary after each scan.</p>
+            </div>
+          </div>
           <div class="metric">
-            <span>נסרקו</span>
+            <span>Jobs scanned</span>
             <strong id="jobsScanned">0</strong>
           </div>
           <div class="metric">
-            <span>התאמות</span>
+            <span>Matches</span>
             <strong id="matchCount">0</strong>
           </div>
           <div class="metric">
-            <span>מילות מפתח</span>
+            <span>Signals</span>
             <strong id="termCount">0</strong>
           </div>
-          <p id="statusText" class="status-text">מוכן לסריקה</p>
+          <p id="statusText" class="status-text">Ready to scan</p>
         </aside>
       </section>
 
       <section class="results-shell">
         <div class="profile-panel">
           <div>
-            <h2>פרופיל שאותר</h2>
-            <p id="profileSummary" class="profile-summary">המערכת תנתח את קורות החיים לאחר הסריקה</p>
+            <span class="section-kicker">Profile intelligence</span>
+            <h2>Detected fit profile</h2>
+            <p id="profileSummary" class="profile-summary">The resume profile will appear after the scan.</p>
           </div>
           <div id="roleRecommendations" class="role-grid"></div>
         </div>
 
         <div class="results-heading">
-          <h2>משרות רלוונטיות</h2>
+          <div>
+            <span class="section-kicker">Shortlist</span>
+            <h2>Relevant opportunities</h2>
+          </div>
           <span id="generatedAt"></span>
         </div>
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>התאמה</th>
-                <th>חברה</th>
-                <th>תפקיד</th>
-                <th>מיקום</th>
-                <th>למה מתאים</th>
-                <th>הגשה</th>
+                <th>Fit</th>
+                <th>Company</th>
+                <th>Role</th>
+                <th>Location</th>
+                <th>Fit rationale</th>
+                <th>Apply</th>
               </tr>
             </thead>
             <tbody id="resultsBody">
               <tr>
-                <td colspan="6" class="empty-state">אין תוצאות עדיין</td>
+                <td colspan="6" class="empty-state">No scan results yet</td>
               </tr>
             </tbody>
           </table>
@@ -95,10 +172,13 @@
 
       <section class="source-links-shell">
         <div class="results-heading">
-          <h2>חיפושים באתרים נוספים</h2>
+          <div>
+            <span class="section-kicker">External search</span>
+            <h2>Search shortcuts</h2>
+          </div>
         </div>
         <div id="sourceLinks" class="source-links">
-          <span class="empty-state inline">אין קישורי חיפוש עדיין</span>
+          <span class="empty-state inline">No search shortcuts yet</span>
         </div>
       </section>
     </main>

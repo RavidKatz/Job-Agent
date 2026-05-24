@@ -37,14 +37,14 @@ export function scoreJob(job, resumeProfile, config) {
   const roleMatches = collectMatches(`${title} ${body}`, config.targetRoles);
   if (roleMatches.length > 0) {
     score += Math.min(22, roleMatches.length * 9);
-    reasons.push(`תפקיד קרוב לפרופיל: ${roleMatches.join(", ")}`);
+    reasons.push(`Role direction match: ${roleMatches.join(", ")}`);
   }
 
   const skillMatches = collectMatches(body, config.coreSkills);
   const resumeSkillMatches = skillMatches.filter((skill) => resumeProfile.matchedConfiguredTerms.includes(skill));
   if (skillMatches.length > 0) {
     score += Math.min(24, skillMatches.length * 4);
-    reasons.push(`התאמת כישורים: ${skillMatches.slice(0, 8).join(", ")}`);
+    reasons.push(`Skill match: ${skillMatches.slice(0, 8).join(", ")}`);
   }
 
   if (resumeSkillMatches.length > 0) {
@@ -54,7 +54,7 @@ export function scoreJob(job, resumeProfile, config) {
   const domainMatches = collectMatches(body, config.domainKeywords);
   if (domainMatches.length > 0) {
     score += Math.min(8, domainMatches.length * 3);
-    reasons.push(`תחום רלוונטי: ${domainMatches.join(", ")}`);
+    reasons.push(`Relevant domain: ${domainMatches.join(", ")}`);
   }
 
   const locationMatches = collectMatches(`${job.location ?? ""} ${job.workMode ?? ""}`, [
@@ -63,29 +63,29 @@ export function scoreJob(job, resumeProfile, config) {
   ]);
   if (locationMatches.length > 0) {
     score += 6;
-    reasons.push(`מיקום/מודל עבודה מתאים: ${locationMatches.join(", ")}`);
+    reasons.push(`Location or work model fit: ${locationMatches.join(", ")}`);
   }
 
   const overlap = tokenOverlapScore(resumeProfile.tokens, body);
   score += overlap.score;
   if (overlap.overlap.length > 0) {
-    reasons.push(`חפיפה טקסטואלית עם קורות החיים: ${overlap.overlap.slice(0, 10).join(", ")}`);
+    reasons.push(`Resume overlap: ${overlap.overlap.slice(0, 10).join(", ")}`);
   }
 
   const avoidMatches = collectMatches(body, config.avoidKeywords);
   if (avoidMatches.length > 0) {
     score -= Math.min(35, avoidMatches.length * 15);
-    warnings.push(`מילות סינון: ${avoidMatches.join(", ")}`);
+    warnings.push(`Negative filters: ${avoidMatches.join(", ")}`);
   }
 
   if (hasAnyPhrase(title, config.seniority?.avoid ?? [])) {
     score -= 14;
-    warnings.push("רמת בכירות פחות מתאימה להגדרות");
+    warnings.push("Seniority level is less aligned with the profile settings");
   }
 
   if (!job.applyUrl) {
     score -= 5;
-    warnings.push("חסר קישור הגשה");
+    warnings.push("Missing direct application link");
   }
 
   const matchPercent = Math.max(0, Math.min(100, Math.round(score)));
