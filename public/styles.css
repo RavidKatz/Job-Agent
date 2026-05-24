@@ -316,6 +316,11 @@ td {
   text-decoration: none;
 }
 
+.muted-action {
+  color: var(--muted);
+  font-weight: 800;
+}
+
 .empty-state {
   padding: 34px;
   color: var(--muted);

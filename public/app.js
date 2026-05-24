@@ -16,6 +16,19 @@ const resultsBody = document.querySelector("#resultsBody");
 
 let latestCsv = "";
 
+function isRealApplyUrl(value) {
+  const text = String(value ?? "").trim();
+  return text.startsWith("http://") || text.startsWith("https://");
+}
+
+function renderApplyAction(match) {
+  if (!isRealApplyUrl(match.applyUrl)) {
+    return `<span class="muted-action">דוגמה בלבד</span>`;
+  }
+
+  return `<a class="apply-link" href="${escapeAttribute(match.applyUrl)}" target="_blank" rel="noreferrer">פתח</a>`;
+}
+
 function setStatus(text, isError = false) {
   statusText.textContent = text;
   statusText.classList.toggle("error", isError);
@@ -47,7 +60,7 @@ function renderMatches(analysis) {
       <td>${escapeHtml(match.position)}</td>
       <td>${escapeHtml(match.location)}</td>
       <td class="notes">${escapeHtml(match.notes || match.warnings || "")}</td>
-      <td>${match.applyUrl ? `<a class="apply-link" href="${escapeAttribute(match.applyUrl)}" target="_blank" rel="noreferrer">פתח</a>` : ""}</td>
+      <td>${renderApplyAction(match)}</td>
     </tr>
   `).join("");
 }
