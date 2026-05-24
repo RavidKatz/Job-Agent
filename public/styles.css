@@ -46,7 +46,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -131,6 +132,7 @@ input {
 .upload-panel,
 .summary-panel,
 .results-shell,
+.tracker-shell,
 .source-links-shell {
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -669,6 +671,7 @@ button:disabled {
 }
 
 .results-shell,
+.tracker-shell,
 .source-links-shell {
   margin-top: 18px;
   overflow: hidden;
@@ -746,6 +749,33 @@ button:disabled {
   font-size: 0.78rem;
 }
 
+.tracker-heading {
+  align-items: flex-start;
+  background:
+    linear-gradient(120deg, rgba(21, 92, 79, 0.08), rgba(255, 255, 255, 0.86)),
+    #fff;
+}
+
+.tracker-heading p {
+  max-width: 560px;
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.tracker-actions,
+.application-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tracker-actions {
+  justify-content: flex-end;
+}
+
 .table-wrap {
   overflow: auto;
   background: #fff;
@@ -807,6 +837,7 @@ tbody tr:hover {
 .apply-link {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   min-height: 34px;
   padding: 0 11px;
   border: 1px solid rgba(226, 95, 63, 0.26);
@@ -815,6 +846,121 @@ tbody tr:hover {
   background: rgba(226, 95, 63, 0.08);
   font-weight: 800;
   text-decoration: none;
+}
+
+.apply-link.compact {
+  min-height: 36px;
+  color: var(--green);
+  border-color: rgba(21, 92, 79, 0.24);
+  background: var(--green-soft);
+}
+
+.track-job-button {
+  min-height: 34px;
+  padding: 0 11px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+}
+
+.tracker-table {
+  min-width: 1320px;
+}
+
+.tracker-table td {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.tracker-table th:nth-child(1),
+.tracker-table td:nth-child(1) {
+  min-width: 180px;
+}
+
+.tracker-table th:nth-child(2),
+.tracker-table td:nth-child(2) {
+  min-width: 190px;
+}
+
+.tracker-table th:nth-child(3),
+.tracker-table td:nth-child(3) {
+  min-width: 220px;
+}
+
+.tracker-table th:nth-child(5),
+.tracker-table td:nth-child(5) {
+  min-width: 190px;
+}
+
+.tracker-table th:nth-child(6),
+.tracker-table td:nth-child(6) {
+  min-width: 280px;
+}
+
+.tracker-table th:nth-child(7),
+.tracker-table td:nth-child(7) {
+  min-width: 360px;
+}
+
+.tracker-table small {
+  display: block;
+  margin-top: 6px;
+  color: var(--quiet);
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.tracker-score {
+  min-width: 72px;
+  background: var(--ink);
+}
+
+.status-select,
+.tracker-input,
+.tracker-date {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  background: var(--panel-soft);
+  font-weight: 700;
+}
+
+.status-select {
+  min-width: 170px;
+  padding: 0 10px;
+  accent-color: var(--green);
+}
+
+.tracker-input,
+.tracker-date {
+  padding: 0 11px;
+}
+
+.tracker-input.wide {
+  min-width: 220px;
+}
+
+.tracker-link-cell {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.remove-tracker-button {
+  min-height: 34px;
+  padding: 0 11px;
+  border-color: rgba(183, 66, 66, 0.22);
+  border-radius: 999px;
+  color: var(--danger);
+  background: rgba(183, 66, 66, 0.08);
+  font-size: 0.82rem;
+}
+
+.remove-tracker-button:hover:not(:disabled) {
+  color: #fff;
+  background: var(--danger);
 }
 
 .muted-action {
@@ -857,6 +1003,7 @@ tbody tr:hover {
 .command-center,
 .workspace-grid,
 .results-shell,
+.tracker-shell,
 .source-links-shell {
   animation: rise-in 520ms ease both;
 }
@@ -871,6 +1018,10 @@ tbody tr:hover {
 
 .source-links-shell {
   animation-delay: 160ms;
+}
+
+.tracker-shell {
+  animation-delay: 145ms;
 }
 
 @keyframes rise-in {
@@ -900,7 +1051,8 @@ tbody tr:hover {
   .upload-panel,
   .summary-panel,
   .profile-panel,
-  .role-grid {
+  .role-grid,
+  .tracker-heading {
     display: grid;
     grid-template-columns: 1fr;
   }
@@ -971,6 +1123,15 @@ tbody tr:hover {
 
   .actions-row {
     justify-content: stretch;
+  }
+
+  .tracker-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .tracker-link-cell {
+    grid-template-columns: 1fr;
   }
 
   button {

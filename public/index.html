@@ -170,6 +170,41 @@
         </div>
       </section>
 
+      <section class="tracker-shell" aria-labelledby="trackerTitle">
+        <div class="results-heading tracker-heading">
+          <div>
+            <span class="section-kicker">Application pipeline</span>
+            <h2 id="trackerTitle">Application tracker</h2>
+            <p>Save opportunities, update the status manually, and keep every submission in one place.</p>
+          </div>
+          <div class="tracker-actions">
+            <button id="addManualApplication" type="button">Add manual row</button>
+            <button id="exportTrackerButton" type="button" disabled>Export tracker CSV</button>
+          </div>
+        </div>
+        <div class="table-wrap tracker-table-wrap">
+          <table class="tracker-table">
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Company</th>
+                <th>Role</th>
+                <th>Fit</th>
+                <th>Last update</th>
+                <th>Next step</th>
+                <th>Link</th>
+                <th>Remove</th>
+              </tr>
+            </thead>
+            <tbody id="applicationTrackerBody">
+              <tr>
+                <td colspan="8" class="empty-state">No tracked applications yet</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <section class="source-links-shell">
         <div class="results-heading">
           <div>
