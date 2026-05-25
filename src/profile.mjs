@@ -1,6 +1,11 @@
 import { includesPhrase, normalizeText, tokenize, uniqueSorted } from "./text.mjs";
 import { buildDynamicSearchTerms, inferSeniority, inferYearsExperience, recommendRoles } from "./role-recommender.mjs";
 
+function matchesConfiguredTerm(normalizedResume, term, aliases = {}) {
+  const candidates = [term, ...(aliases[term] ?? [])];
+  return candidates.some((candidate) => includesPhrase(normalizedResume, candidate));
+}
+
 export function buildResumeProfile(resumeText, config) {
   const normalized = normalizeText(resumeText);
   const tokens = new Set(tokenize(normalized));
@@ -10,7 +15,9 @@ export function buildResumeProfile(resumeText, config) {
     ...(config.targetRoles ?? [])
   ];
 
-  const matchedConfiguredTerms = configuredSkills.filter((term) => includesPhrase(normalized, term));
+  const matchedConfiguredTerms = configuredSkills.filter((term) => {
+    return matchesConfiguredTerm(normalized, term, config.skillAliases ?? {});
+  });
   const yearsExperience = inferYearsExperience(resumeText);
   const roleRecommendations = recommendRoles(resumeText, config);
   const dynamicSearchTerms = buildDynamicSearchTerms(roleRecommendations, config);

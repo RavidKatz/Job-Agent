@@ -1,22 +1,42 @@
 {
   "minimumScore": 75,
   "targetRoles": [
-    "AI Solution Manager",
-    "AI Project Manager",
     "PMO",
+    "PMO Coordinator",
+    "Project Coordinator",
     "Digital Project Manager",
-    "CRM Project Manager",
+    "Junior Project Manager",
+    "Project Manager",
+    "Project Analyst",
+    "Operations Analyst",
+    "Business Analyst",
+    "Data Analyst",
+    "Implementation Analyst",
+    "Implementation Project Manager",
     "Systems Implementer",
-    "Business Applications Manager",
+    "ERP Implementer",
     "Product Operations"
   ],
   "preferredLocations": [
     "Israel",
     "Tel Aviv",
+    "Tel Aviv-Yafo",
     "Ramat Gan",
     "Petah Tikva",
+    "Rishon LeZion",
+    "Rishon Le Zion",
+    "Raanana",
     "Herzliya",
     "Haifa",
+    "Jerusalem",
+    "ישראל",
+    "תל אביב",
+    "פתח תקווה",
+    "ראשון לציון",
+    "רעננה",
+    "הרצליה",
+    "חיפה",
+    "ירושלים",
     "Remote",
     "Hybrid"
   ],
@@ -26,24 +46,89 @@
     "On-site"
   ],
   "coreSkills": [
-    "AI",
     "PMO",
+    "Project Manager",
+    "Project Coordination",
     "Project Management",
+    "Scheduling",
+    "Reporting",
+    "Client Communication",
     "Process Improvement",
     "CRM",
     "API",
     "Digital Projects",
     "Systems Implementation",
     "Industrial Engineering",
+    "Industrial Engineering and Management",
     "Operations",
     "QA",
     "Stakeholder Management",
     "Data Analysis",
+    "Statistical Analysis",
+    "Data Science",
     "SQL",
+    "SQL Server",
+    "Python",
+    "Machine Learning",
+    "NoSQL",
+    "Data Visualization",
+    "Tableau",
+    "Qlik",
     "Excel",
+    "Microsoft Office",
+    "Microsoft Access",
+    "ERP",
+    "NetSuite",
+    "Trello",
     "Monday",
-    "Jira"
+    "Jira",
+    "Figma"
   ],
+  "skillAliases": {
+    "Client Communication": [
+      "communications with clients",
+      "status updates to clients",
+      "resolving issues"
+    ],
+    "Data Analysis": [
+      "data and statistical analysis",
+      "large-scale pollutant monitoring datasets",
+      "generate insights",
+      "analytical mindset"
+    ],
+    "Data Visualization": [
+      "Qlik Sense",
+      "Tableau"
+    ],
+    "Machine Learning": [
+      "ML"
+    ],
+    "Project Coordination": [
+      "coordinating with diverse stakeholders",
+      "managed communications",
+      "monitoring progress",
+      "status updates"
+    ],
+    "Project Management": [
+      "managed multiple projects",
+      "end-to-end",
+      "planning",
+      "scheduling",
+      "ensuring timely delivery"
+    ],
+    "Reporting": [
+      "preparing reports",
+      "engineering reports",
+      "reports"
+    ],
+    "Stakeholder Management": [
+      "diverse stakeholders",
+      "clients",
+      "architects",
+      "local authorities",
+      "municipalities"
+    ]
+  },
   "domainKeywords": [
     "fintech",
     "insurance",
@@ -60,16 +145,22 @@
     "hands-on coding",
     "sales only",
     "commission only",
-    "internship"
+    "marketing",
+    "internship",
+    "senior manager",
+    "head of",
+    "team lead",
+    "architect"
   ],
   "seniority": {
     "preferred": [
+      "student",
+      "junior",
+      "associate",
       "mid",
-      "senior",
-      "lead"
+      "coordinator"
     ],
     "avoid": [
-      "junior",
       "intern",
       "director",
       "vp"

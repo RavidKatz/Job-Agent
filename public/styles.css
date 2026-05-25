@@ -834,6 +834,17 @@ tbody tr:hover {
   color: var(--muted);
 }
 
+.notes span,
+.notes strong {
+  display: block;
+}
+
+.notes strong {
+  margin-top: 8px;
+  color: var(--danger);
+  font-size: 0.84rem;
+}
+
 .apply-link {
   display: inline-flex;
   align-items: center;

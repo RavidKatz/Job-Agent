@@ -6,7 +6,7 @@
       "type": "hiremetech",
       "enabled": true,
       "useProfileSearchTerms": true,
-      "maxQueries": 6,
+      "maxQueries": 10,
       "limit": 20,
       "country": "Israel",
       "searchTerms": [
@@ -22,7 +22,7 @@
       "type": "remotive",
       "enabled": true,
       "useProfileSearchTerms": true,
-      "maxQueries": 2,
+      "maxQueries": 4,
       "limit": 20,
       "searchTerms": [
         "project manager",
@@ -37,7 +37,7 @@
       "type": "himalayas",
       "enabled": true,
       "useProfileSearchTerms": true,
-      "maxQueries": 2,
+      "maxQueries": 4,
       "searchTerms": [
         "project manager",
         "operations manager",
@@ -51,7 +51,7 @@
       "type": "searchPage",
       "enabled": true,
       "useProfileSearchTerms": true,
-      "maxQueries": 4,
+      "maxQueries": 8,
       "urlTemplate": "https://www.linkedin.com/jobs/search/?keywords={queryEncoded}&location=Israel",
       "searchTerms": [
         "AI Project Manager",
@@ -67,7 +67,7 @@
       "type": "searchPage",
       "enabled": true,
       "useProfileSearchTerms": true,
-      "maxQueries": 4,
+      "maxQueries": 8,
       "urlTemplate": "https://www.alljobs.co.il/SearchResultsGuest.aspx?keyWord={queryEncoded}",
       "searchTerms": [
         "AI Project Manager",
@@ -83,7 +83,7 @@
       "type": "searchPage",
       "enabled": true,
       "useProfileSearchTerms": true,
-      "maxQueries": 4,
+      "maxQueries": 8,
       "urlTemplate": "https://www.drushim.co.il/jobs/search/{queryEncoded}/",
       "searchTerms": [
         "AI Project Manager",

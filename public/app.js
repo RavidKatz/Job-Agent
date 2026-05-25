@@ -94,10 +94,21 @@ function renderMatches(analysis) {
       <td>${escapeHtml(match.company)}</td>
       <td>${escapeHtml(match.position)}</td>
       <td>${escapeHtml(match.location)}</td>
-      <td class="notes">${escapeHtml(match.notes || match.warnings || "")}</td>
+      <td class="notes">${renderMatchRationale(match)}</td>
       <td>${renderApplyAction(match, index)}</td>
     </tr>
   `).join("");
+}
+
+function renderMatchRationale(match) {
+  const parts = [];
+  if (match.notes) {
+    parts.push(`<span>${escapeHtml(match.notes)}</span>`);
+  }
+  if (match.warnings) {
+    parts.push(`<strong>${escapeHtml(match.warnings)}</strong>`);
+  }
+  return parts.join("");
 }
 
 function renderProfile(profile) {

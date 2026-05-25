@@ -2,71 +2,84 @@ import { includesPhrase, normalizeText, uniqueSorted } from "./text.mjs";
 
 const ROLE_FAMILIES = [
   {
-    id: "ai-project-management",
-    title: "AI project management",
+    id: "project-coordination",
+    title: "Project coordination and PMO",
     searchTerms: [
-      "AI Project Manager",
-      "AI Program Manager",
-      "AI Product Operations",
-      "Automation Project Manager"
-    ],
-    signals: [
-      "AI",
-      "automation",
-      "project management",
-      "PMO",
-      "stakeholder",
-      "process improvement"
-    ],
-    reasons: [
-      "Combines project delivery, process thinking, and automation",
-      "Fits profiles that translate business needs into technical execution"
-    ]
-  },
-  {
-    id: "pmo",
-    title: "PMO and process management",
-    searchTerms: [
-      "PMO",
       "Project Coordinator",
-      "Project Manager",
-      "Program Coordinator"
+      "PMO Coordinator",
+      "Junior Project Manager",
+      "Project Analyst"
     ],
     signals: [
-      "PMO",
+      "project manager",
+      "project coordination",
       "project management",
-      "coordination",
-      "Excel",
-      "Jira",
-      "Monday",
-      "stakeholder"
+      "PMO",
+      "scheduling",
+      "reporting",
+      "status updates",
+      "stakeholder",
+      "client communication",
+      "Trello",
+      "Jira"
     ],
     reasons: [
-      "Matches experience in tracking, coordination, reporting, and process control",
-      "Works well for cross-functional stakeholder environments"
+      "Matches hands-on project tracking, reporting, and stakeholder coordination",
+      "Fits early to mid-level project delivery roles"
     ]
   },
   {
-    id: "business-applications",
-    title: "Business applications and implementation",
+    id: "data-business-analysis",
+    title: "Data and business analysis",
     searchTerms: [
-      "Business Applications Manager",
+      "Data Analyst",
+      "Business Analyst",
+      "Operations Analyst",
+      "Project Analyst"
+    ],
+    signals: [
+      "data analysis",
+      "statistical analysis",
+      "data science",
+      "SQL",
+      "SQL Server",
+      "Python",
+      "Machine Learning",
+      "Data Visualization",
+      "Tableau",
+      "Qlik",
+      "Excel",
+      "reports"
+    ],
+    reasons: [
+      "Matches analytical work, reporting, and large dataset handling",
+      "Fits business-facing analysis roles that do not require senior ownership"
+    ]
+  },
+  {
+    id: "implementation-erp",
+    title: "Implementation and ERP operations",
+    searchTerms: [
+      "Implementation Analyst",
+      "Implementation Project Manager",
       "Systems Implementer",
-      "Application Manager",
-      "CRM Implementation Manager"
+      "ERP Implementer",
+      "NetSuite Implementer"
     ],
     signals: [
       "systems implementation",
       "CRM",
-      "API",
-      "QA",
+      "ERP",
+      "NetSuite",
+      "Microsoft Access",
       "SQL",
       "business applications",
-      "implementation"
+      "implementation",
+      "QA"
     ],
     reasons: [
-      "Fits profiles that understand both business processes and systems",
-      "Relevant for implementation, requirements, and rollout roles"
+      "Fits technical-business profiles that can support system rollout",
+      "Relevant for implementation support, requirements, and operations"
     ]
   },
   {
@@ -85,7 +98,9 @@ const ROLE_FAMILIES = [
       "customer",
       "operations",
       "loyalty",
-      "process"
+      "process",
+      "Figma",
+      "UX/UI"
     ],
     reasons: [
       "Connects service, product, systems, and operations work",
@@ -94,25 +109,29 @@ const ROLE_FAMILIES = [
   },
   {
     id: "operations",
-    title: "Operations and process improvement",
+    title: "Operations and process analysis",
     searchTerms: [
-      "Operations Manager",
-      "Operations Project Manager",
+      "Operations Analyst",
+      "Operations Coordinator",
+      "Operations Project Coordinator",
       "Process Improvement Manager",
-      "Business Operations Manager"
+      "Business Operations Analyst"
     ],
     signals: [
       "operations",
       "process improvement",
       "industrial engineering",
+      "industrial engineering and management",
       "data analysis",
       "Excel",
       "SQL",
-      "workflow"
+      "workflow",
+      "inventory",
+      "logistics"
     ],
     reasons: [
       "Fits analytical profiles with process-oriented thinking",
-      "Relevant for improvement, control, and operational execution"
+      "Relevant for improvement, control, and operational analysis"
     ]
   },
   {
@@ -131,7 +150,8 @@ const ROLE_FAMILIES = [
       "API",
       "stakeholder",
       "process",
-      "CRM"
+      "CRM",
+      "Figma"
     ],
     reasons: [
       "Connects users, data, and product workflows",
@@ -145,6 +165,44 @@ const EXPERIENCE_PATTERNS = [
   /(?:experience|ניסיון)\s*(?:of|של)?\s*(\d{1,2})/giu
 ];
 
+function extractSection(text, startLabel, endLabels) {
+  const source = String(text ?? "");
+  const lower = source.toLowerCase();
+  const startIndex = lower.indexOf(startLabel.toLowerCase());
+  if (startIndex < 0) return "";
+
+  const afterStart = source.slice(startIndex + startLabel.length);
+  const afterStartLower = afterStart.toLowerCase();
+  const endIndexes = endLabels
+    .map((label) => afterStartLower.indexOf(label.toLowerCase()))
+    .filter((index) => index >= 0);
+  const endIndex = endIndexes.length ? Math.min(...endIndexes) : afterStart.length;
+
+  return afterStart.slice(0, endIndex);
+}
+
+function inferYearsFromEmploymentRanges(text) {
+  const employmentText = extractSection(text, "Employment", [
+    "Education",
+    "Military Service",
+    "Volunteer",
+    "Skills",
+    "Language"
+  ]);
+  const sourceText = employmentText || text;
+  const ranges = [...String(sourceText ?? "").matchAll(/\b(20\d{2}|19\d{2})\s*[-–]\s*(20\d{2}|19\d{2}|present|current)\b/giu)];
+  const durations = ranges
+    .map((match) => {
+      const start = Number(match[1]);
+      const end = /present|current/iu.test(match[2]) ? new Date().getFullYear() : Number(match[2]);
+      return end >= start ? end - start : 0;
+    })
+    .filter((duration) => duration > 0 && duration < 30);
+
+  if (!durations.length) return null;
+  return Math.max(...durations);
+}
+
 export function inferYearsExperience(text) {
   const normalized = normalizeText(text);
   const years = [];
@@ -156,6 +214,11 @@ export function inferYearsExperience(text) {
         years.push(value);
       }
     }
+  }
+
+  const rangeYears = inferYearsFromEmploymentRanges(text);
+  if (rangeYears != null) {
+    years.push(rangeYears);
   }
 
   if (!years.length) return null;
@@ -197,7 +260,18 @@ export function recommendRoles(resumeText, config) {
 }
 
 export function buildDynamicSearchTerms(recommendations, config) {
-  const roleTerms = recommendations.flatMap((role) => role.searchTerms);
+  const priorityTerms = recommendations.flatMap((role) => role.searchTerms.slice(0, 2));
+  const remainingRoleTerms = recommendations.flatMap((role) => role.searchTerms.slice(2));
   const configuredRoles = config.targetRoles ?? [];
-  return uniqueSorted([...roleTerms, ...configuredRoles]).slice(0, 14);
+  const orderedTerms = [];
+
+  for (const term of [...priorityTerms, ...remainingRoleTerms, ...configuredRoles]) {
+    const normalized = normalizeText(term);
+    if (!normalized || orderedTerms.some((existing) => normalizeText(existing) === normalized)) {
+      continue;
+    }
+    orderedTerms.push(term);
+  }
+
+  return orderedTerms.slice(0, 18);
 }
