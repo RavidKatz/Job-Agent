@@ -1089,13 +1089,23 @@ tbody tr:hover {
   .hero-subtitle,
   .signal-line {
     inline-size: 100%;
-    max-width: calc(100vw - 88px);
+    max-width: 28ch;
     overflow-wrap: anywhere;
   }
 
   h1 {
     max-width: 9.5ch;
     font-size: clamp(2.25rem, 11vw, 2.9rem);
+  }
+
+  .hero-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .primary-link {
+    width: fit-content;
   }
 
   .topbar-meta {
@@ -1116,7 +1126,7 @@ tbody tr:hover {
   }
 
   .signal-line {
-    max-width: none;
+    max-width: 28ch;
     width: 100%;
   }
 
