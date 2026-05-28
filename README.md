@@ -183,3 +183,27 @@ $env:JOB_API_TOKEN = "your-token"
 - `HireMeTech`: מחובר כמקור משרות בישראל עם קישורים ישירים לעמודי המשרה.
 
 המערכת מוכנה לקלוט כל מקור חוקי שמחזיר JSON, גם אם הוא מגיע מספק חיצוני, Feed של חברה, או יצוא מאתר משרות.
+
+## Private beta tunnel
+
+Local development still uses:
+
+```powershell
+npm start
+```
+
+The default local URL is:
+
+```text
+http://127.0.0.1:4317
+```
+
+For a temporary private beta tunnel, allow the server to listen on all interfaces:
+
+```powershell
+$env:HOST = "0.0.0.0"
+$env:PORT = "4317"
+npm start
+```
+
+Uploaded CV files are written only for extraction and are deleted after processing.

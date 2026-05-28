@@ -7,6 +7,12 @@
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
+    <div class="ambient-stage" aria-hidden="true">
+      <span class="ambient-orb orb-one"></span>
+      <span class="ambient-orb orb-two"></span>
+      <span class="ambient-orb orb-three"></span>
+      <span class="grid-sheen"></span>
+    </div>
     <main class="app-shell">
       <header class="topbar">
         <a class="brand-mark" href="/" aria-label="Job Agent home">
@@ -17,11 +23,14 @@
           </span>
         </a>
         <div class="topbar-meta">
-          <span>Live sources</span>
-          <strong>HireMeTech, Remotive, Himalayas</strong>
+          <span>Workspace</span>
+          <a href="/">Scanner</a>
+          <a href="/tracker.html">Applications</a>
+          <button id="logoutButton" class="topbar-button" type="button" hidden>Logout</button>
         </div>
       </header>
 
+      <div id="mainWorkspace" class="product-workspace">
       <section class="command-center">
         <div class="hero-copy">
           <p class="eyebrow">Resume-first matching</p>
@@ -33,9 +42,15 @@
             <a class="primary-link" href="#matchForm">Start a scan</a>
             <span class="signal-line">Profile signals, source coverage, and direct application links in one workspace.</span>
           </div>
+          <div class="workflow-ribbon" aria-label="Workflow">
+            <span>Parse CV</span>
+            <span>Build profile</span>
+            <span>Score jobs</span>
+            <span>Track pipeline</span>
+          </div>
           <div class="hero-stats" aria-label="Matching workflow highlights">
             <span><strong>75%+</strong> fit threshold</span>
-            <span><strong>3</strong> live sources</span>
+            <span><strong>4</strong> source channels</span>
             <span><strong>Fast</strong> CSV export</span>
           </div>
         </div>
@@ -73,11 +88,37 @@
               <span>HireMeTech</span>
               <span>Remotive</span>
               <span>Himalayas</span>
+              <span>Drushim curated</span>
               <span>LinkedIn search</span>
             </div>
             <p>Every match keeps its original apply link when the source provides one.</p>
           </div>
+          <div class="visual-card insight-card">
+            <span class="insight-dot"></span>
+            <div>
+              <strong>Smart rationale</strong>
+              <p>Main fit, main gap, and recommended action for every role.</p>
+            </div>
+          </div>
         </div>
+      </section>
+
+      <section class="experience-strip" aria-label="Product highlights">
+        <article>
+          <span>01</span>
+          <strong>Private profile</strong>
+          <p>Each user gets a personal workspace built from their uploaded resume.</p>
+        </article>
+        <article>
+          <span>02</span>
+          <strong>Precision scoring</strong>
+          <p>Fit is calculated from requirements, role substance, career direction, and market competitiveness.</p>
+        </article>
+        <article>
+          <span>03</span>
+          <strong>Application control</strong>
+          <p>Saved jobs move into a managed tracker with manual status updates.</p>
+        </article>
       </section>
 
       <section class="workspace-grid">
@@ -95,6 +136,10 @@
             <span id="resumeFileName" class="drop-meta">PDF, DOCX, TXT, or MD</span>
             <input id="resumeFile" name="resume" type="file" accept=".pdf,.docx,.txt,.md" required>
           </label>
+
+          <p class="beta-privacy-notice">
+            Private beta version. Please avoid uploading sensitive information if you do not want it processed in this test version. Uploaded CV files are processed for analysis and are not intended to be stored permanently.
+          </p>
 
           <label class="drop-zone secondary" for="jobsFile">
             <span class="drop-title">Custom jobs</span>
@@ -138,6 +183,9 @@
             <span class="section-kicker">Profile intelligence</span>
             <h2>Detected fit profile</h2>
             <p id="profileSummary" class="profile-summary">The resume profile will appear after the scan.</p>
+            <div id="profileFacts" class="profile-facts">
+              <span>Upload a resume to build the profile.</span>
+            </div>
           </div>
           <div id="roleRecommendations" class="role-grid"></div>
         </div>
@@ -170,38 +218,34 @@
         </div>
       </section>
 
-      <section class="tracker-shell" aria-labelledby="trackerTitle">
+      <section id="authPanel" class="auth-panel save-workspace-panel">
+        <div>
+          <p class="eyebrow">Save your workspace</p>
+          <h2>Create a profile after seeing your matches</h2>
+          <p>Register when you want to save your profile, manage submitted roles, attach documents, and sync your tracker.</p>
+        </div>
+        <form id="authForm" class="auth-form">
+          <input id="displayName" name="displayName" placeholder="Full name">
+          <input id="username" name="username" autocomplete="username" placeholder="Email or username" required>
+          <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Password" required>
+          <div class="auth-actions">
+            <button id="registerButton" type="button">Create account</button>
+            <button id="loginButton" type="submit">Login</button>
+          </div>
+          <p id="authStatus" class="status-text">Scan first. Create an account when you want to save and manage the process.</p>
+        </form>
+      </section>
+
+      <section class="tracker-cta-shell" aria-labelledby="trackerTitle">
         <div class="results-heading tracker-heading">
           <div>
             <span class="section-kicker">Application pipeline</span>
-            <h2 id="trackerTitle">Application tracker</h2>
-            <p>Save opportunities, update the status manually, and keep every submission in one place.</p>
+            <h2 id="trackerTitle">Manage submitted roles in a dedicated dashboard</h2>
+            <p>Save opportunities from the scan, then open the full dashboard to update statuses and attach application documents.</p>
           </div>
           <div class="tracker-actions">
-            <button id="addManualApplication" type="button">Add manual row</button>
-            <button id="exportTrackerButton" type="button" disabled>Export tracker CSV</button>
+            <a class="primary-link" href="/tracker.html">Open application dashboard</a>
           </div>
-        </div>
-        <div class="table-wrap tracker-table-wrap">
-          <table class="tracker-table">
-            <thead>
-              <tr>
-                <th>Status</th>
-                <th>Company</th>
-                <th>Role</th>
-                <th>Fit</th>
-                <th>Last update</th>
-                <th>Next step</th>
-                <th>Link</th>
-                <th>Remove</th>
-              </tr>
-            </thead>
-            <tbody id="applicationTrackerBody">
-              <tr>
-                <td colspan="8" class="empty-state">No tracked applications yet</td>
-              </tr>
-            </tbody>
-          </table>
         </div>
       </section>
 
@@ -216,6 +260,7 @@
           <span class="empty-state inline">No search shortcuts yet</span>
         </div>
       </section>
+      </div>
     </main>
 
     <script type="module" src="/app.js"></script>
