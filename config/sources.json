@@ -9,6 +9,13 @@
       "maxQueries": 10,
       "limit": 20,
       "country": "Israel",
+      "directLinks": [
+        {
+          "label": "HireMeTech: Israel latest jobs",
+          "query": "Israel latest jobs",
+          "url": "https://hiremetech.com/jobs-app?view=jobs&sort_by=posted_date&sort_order=desc&country=Israel"
+        }
+      ],
       "searchTerms": [
         "AI Project Manager",
         "PMO",
@@ -64,11 +71,18 @@
     {
       "id": "alljobs-search",
       "name": "AllJobs",
-      "type": "searchPage",
+      "type": "alljobs",
       "enabled": true,
       "useProfileSearchTerms": true,
-      "maxQueries": 8,
+      "maxQueries": 4,
       "urlTemplate": "https://www.alljobs.co.il/SearchResultsGuest.aspx?keyWord={queryEncoded}",
+      "directLinks": [
+        {
+          "label": "AllJobs: home",
+          "query": "AllJobs home",
+          "url": "https://www.alljobs.co.il/"
+        }
+      ],
       "searchTerms": [
         "AI Project Manager",
         "PMO",
@@ -80,11 +94,19 @@
     {
       "id": "drushim-search",
       "name": "Drushim",
-      "type": "searchPage",
+      "type": "drushim",
       "enabled": true,
       "useProfileSearchTerms": true,
-      "maxQueries": 8,
+      "maxQueries": 3,
+      "limit": 30,
       "urlTemplate": "https://www.drushim.co.il/jobs/search/{queryEncoded}/",
+      "directLinks": [
+        {
+          "label": "Drushim: junior tech and project roles",
+          "query": "experience 1-2",
+          "url": "https://www.drushim.co.il/jobs/subcat/56-70-111-231-324-398-463-720/?experience=1-2&ssaen=3"
+        }
+      ],
       "searchTerms": [
         "AI Project Manager",
         "PMO",

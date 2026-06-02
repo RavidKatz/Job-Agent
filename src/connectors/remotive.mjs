@@ -1,4 +1,5 @@
 import { fetchJson, normalizeTerms, stripHtml } from "./http.mjs";
+import { normalizeJob } from "./job-model.mjs";
 
 export async function loadRemotiveJobs(source) {
   const terms = normalizeTerms(source.searchTerms ?? ["project manager"]);
@@ -13,7 +14,8 @@ export async function loadRemotiveJobs(source) {
 
     const payload = await fetchJson(url, source.id);
     for (const job of payload.jobs ?? []) {
-      jobs.push({
+      jobs.push(normalizeJob({
+        id: job.id,
         company: job.company_name ?? "",
         title: job.title ?? "",
         location: job.candidate_required_location ?? "Remote",
@@ -23,7 +25,7 @@ export async function loadRemotiveJobs(source) {
         postedAt: job.publication_date ?? "",
         description: stripHtml([job.category, job.job_type, job.description].join(" ")),
         tags: [job.category, job.job_type].filter(Boolean)
-      });
+      }, source));
     }
   }
 

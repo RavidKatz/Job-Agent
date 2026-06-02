@@ -1,4 +1,5 @@
 import { fetchJson, normalizeTerms, stripHtml } from "./http.mjs";
+import { normalizeJob } from "./job-model.mjs";
 
 function readJobs(payload) {
   if (Array.isArray(payload)) return payload;
@@ -27,7 +28,8 @@ export async function loadHimalayasJobs(source) {
 
     const payload = await fetchJson(url, source.id);
     for (const job of readJobs(payload)) {
-      jobs.push({
+      jobs.push(normalizeJob({
+        id: job.id,
         company: job.companyName ?? "",
         title: job.title ?? "",
         location: formatLocation(job),
@@ -41,7 +43,7 @@ export async function loadHimalayasJobs(source) {
           ...(Array.isArray(job.category) ? job.category : []),
           ...(Array.isArray(job.parentCategories) ? job.parentCategories : [])
         ].filter(Boolean)
-      });
+      }, source));
     }
   }
 

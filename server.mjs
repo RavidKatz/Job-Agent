@@ -143,7 +143,8 @@ async function handleMatch(request, response) {
     ? { jobs: uploadedJobs, notices: ["Using uploaded jobs JSON."], sourceLinks: [] }
     : await loadJobs(rootDir, {
         sourcesPath: "config/sources.json",
-        searchTerms: resumeProfile.dynamicSearchTerms
+        searchTerms: resumeProfile.dynamicSearchTerms,
+        sourceIds: parseSelectedSources(fields.sourceIds)
       });
 
   const analysis = analyzeJobsWithProfile({
@@ -158,6 +159,19 @@ async function handleMatch(request, response) {
     ...analysis,
     csv: `\uFEFF${toCsv(analysis.matches)}`
   });
+}
+
+function parseSelectedSources(value) {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.map(String).filter(Boolean) : [];
+  } catch {
+    return String(value)
+      .split(",")
+      .map((sourceId) => sourceId.trim())
+      .filter(Boolean);
+  }
 }
 
 async function handleAuth(request, response, url) {

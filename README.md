@@ -207,3 +207,89 @@ npm start
 ```
 
 Uploaded CV files are written only for extraction and are deleted after processing.
+
+## Private Beta Sharing
+
+Use this workflow when you want to send Job Agent to a small group of private beta testers.
+
+The local URL is only for your own computer:
+
+```text
+http://127.0.0.1:4317/
+```
+
+Friends need a public HTTPS tunnel URL.
+
+Start the beta server first:
+
+```powershell
+.\start-beta-server.ps1
+```
+
+This starts the app with:
+
+```powershell
+$env:HOST = "0.0.0.0"
+$env:PORT = "4317"
+```
+
+Keep this terminal open.
+
+Open a second terminal and start the tunnel:
+
+```powershell
+.\start-beta-tunnel.ps1
+```
+
+If Cloudflare Tunnel is installed, the script runs:
+
+```powershell
+cloudflared tunnel --url http://localhost:4317
+```
+
+Copy the generated link that looks like this:
+
+```text
+https://example.trycloudflare.com
+```
+
+This generated HTTPS tunnel URL is the link to send to friends.
+
+Do not send:
+
+```text
+http://127.0.0.1:4317/
+```
+
+The tunnel link is temporary. It stops working if the app server terminal or the tunnel terminal is closed.
+
+If Cloudflare Tunnel is not installed, use ngrok as a fallback.
+
+Start the beta server first, then run:
+
+```powershell
+ngrok http 4317
+```
+
+Send the generated link that looks like this:
+
+```text
+https://example.ngrok-free.app
+```
+
+Before sending the link, test it from a mobile phone.
+
+Private beta mobile checklist:
+
+- Open the tunnel link from a phone.
+- Upload a test CV.
+- Confirm profile analysis works.
+- Confirm job results appear.
+- Confirm Add to dashboard works.
+- Confirm the dashboard opens.
+- Confirm status update works.
+- Confirm the uploaded CV is deleted from `uploads`.
+- Confirm there is no horizontal scrolling on mobile.
+- Confirm the privacy notice is visible.
+
+This setup is temporary and not production-ready. It is intended only for a small private beta.

@@ -1,22 +1,6 @@
 {
-  "minimumScore": 75,
-  "targetRoles": [
-    "PMO",
-    "PMO Coordinator",
-    "Project Coordinator",
-    "Digital Project Manager",
-    "Junior Project Manager",
-    "Project Manager",
-    "Project Analyst",
-    "Operations Analyst",
-    "Business Analyst",
-    "Data Analyst",
-    "Implementation Analyst",
-    "Implementation Project Manager",
-    "Systems Implementer",
-    "ERP Implementer",
-    "Product Operations"
-  ],
+  "minimumScore": 60,
+  "targetRoles": [],
   "preferredLocations": [
     "Israel",
     "Tel Aviv",
@@ -46,6 +30,28 @@
     "On-site"
   ],
   "coreSkills": [
+    "AI",
+    "AI Agent",
+    "AI Workflows",
+    "Automation",
+    "Builder Mindset",
+    "Dashboard",
+    "KPI Dashboard",
+    "Knowledge Agent",
+    "Low-code",
+    "No-code",
+    "Make",
+    "n8n",
+    "Workato",
+    "Workflow Automation",
+    "Zapier",
+    "Requirements Gathering",
+    "Product Operations",
+    "Delivery Management",
+    "Project Control",
+    "Roadmap",
+    "User Stories",
+    "UAT",
     "PMO",
     "Project Manager",
     "Project Coordination",
@@ -83,12 +89,102 @@
     "Monday",
     "Jira",
     "Figma"
+    ,
+    "Software Developer",
+    "Software Engineering",
+    "Full Stack",
+    "Frontend",
+    "Backend",
+    "JavaScript",
+    "TypeScript",
+    "React",
+    "Node.js",
+    "Java",
+    "C#",
+    "Web Development",
+    "Accounting",
+    "Bookkeeping",
+    "Bookkeeper",
+    "Accounts Payable",
+    "Accounts Receivable",
+    "Payroll",
+    "Finance",
+    "Finance Analyst",
+    "Invoices",
+    "Reconciliation",
+    "Financial Statements",
+    "Priority",
+    "SAP",
+    "Sales",
+    "Customer Service",
+    "Customer Support",
+    "Account Management",
+    "Retention",
+    "Upsell",
+    "Call Center",
+    "Human Resources",
+    "Recruiting",
+    "Talent Acquisition",
+    "Onboarding",
+    "Marketing",
+    "Digital Marketing",
+    "Content",
+    "Social Media",
+    "SEO",
+    "PPC",
+    "Logistics",
+    "Supply Chain",
+    "Procurement",
+    "Purchasing",
+    "Warehouse",
+    "Administration",
+    "Office Management",
+    "Back Office"
   ],
   "skillAliases": {
+    "AI": [
+      "AI-based",
+      "artificial intelligence"
+    ],
+    "AI Agent": [
+      "AI-based internal knowledge agent",
+      "knowledge agent",
+      "internal knowledge agent"
+    ],
+    "AI Workflows": [
+      "AI workflows",
+      "AI workflow",
+      "AI-based workflows",
+      "AI solutions and workflows",
+      "AI solution workflows",
+      "AI solution workflow"
+    ],
+    "Automation": [
+      "automations",
+      "automated",
+      "automating",
+      "automation tools",
+      "workflow automation"
+    ],
+    "Builder Mindset": [
+      "build",
+      "building",
+      "built",
+      "builder",
+      "builder mindset",
+      "created",
+      "implemented",
+      "developed"
+    ],
     "Client Communication": [
       "communications with clients",
       "status updates to clients",
       "resolving issues"
+    ],
+    "Dashboard": [
+      "dashboard",
+      "dashboards",
+      "management dashboard"
     ],
     "Data Analysis": [
       "data and statistical analysis",
@@ -100,8 +196,32 @@
       "Qlik Sense",
       "Tableau"
     ],
+    "KPI Dashboard": [
+      "KPI dashboard",
+      "KPI dashboards",
+      "performance dashboard",
+      "management dashboard"
+    ],
+    "Knowledge Agent": [
+      "knowledge agent",
+      "internal knowledge agent",
+      "AI-based internal knowledge agent"
+    ],
+    "Low-code": [
+      "low code",
+      "low-code prototype",
+      "low-code prototypes",
+      "low-code or no-code"
+    ],
     "Machine Learning": [
       "ML"
+    ],
+    "No-code": [
+      "no code",
+      "no-code",
+      "no-code prototype",
+      "no-code prototypes",
+      "low-code or no-code"
     ],
     "Project Coordination": [
       "coordinating with diverse stakeholders",
@@ -109,12 +229,67 @@
       "monitoring progress",
       "status updates"
     ],
+    "Project Control": [
+      "project control",
+      "project controls",
+      "tracking progress",
+      "progress tracking",
+      "status tracking",
+      "project tracking"
+    ],
+    "Delivery Management": [
+      "delivery",
+      "delivery execution",
+      "delivery management",
+      "timely delivery",
+      "execution"
+    ],
+    "Requirements Gathering": [
+      "requirements",
+      "requirements gathering",
+      "gathering requirements",
+      "business requirements",
+      "translate business needs",
+      "collect requirements",
+      "define requirements"
+    ],
+    "Product Operations": [
+      "product operations",
+      "product ops",
+      "product workflows",
+      "product processes"
+    ],
+    "Roadmap": [
+      "roadmap",
+      "roadmaps",
+      "product roadmap"
+    ],
+    "User Stories": [
+      "user stories",
+      "acceptance criteria",
+      "product requirements"
+    ],
+    "UAT": [
+      "uat",
+      "user acceptance testing",
+      "acceptance testing"
+    ],
     "Project Management": [
       "managed multiple projects",
       "end-to-end",
+      "end to end",
+      "manage initiatives",
+      "manage initiatives end to end",
       "planning",
       "scheduling",
       "ensuring timely delivery"
+    ],
+    "Process Improvement": [
+      "improve processes",
+      "improving processes",
+      "process improvement",
+      "process optimization",
+      "workflow improvement"
     ],
     "Reporting": [
       "preparing reports",
@@ -123,6 +298,8 @@
     ],
     "Stakeholder Management": [
       "diverse stakeholders",
+      "stakeholders",
+      "stakeholder",
       "clients",
       "architects",
       "local authorities",
@@ -139,17 +316,83 @@
     "customer operations",
     "automation"
   ],
+  "toolKeywords": [
+    "Make",
+    "n8n",
+    "Workato",
+    "Zapier",
+    "SQL",
+    "SQL Server",
+    "NoSQL",
+    "Python",
+    "Tableau",
+    "Qlik",
+    "Excel",
+    "Microsoft Office",
+    "Microsoft Access",
+    "NetSuite",
+    "ERP",
+    "CRM",
+    "SAP",
+    "Priority",
+    "Jira",
+    "Monday",
+    "Trello",
+    "Figma",
+    "Power BI",
+    "API"
+  ],
+  "educationFieldMap": {
+    "industrial engineering and management": {
+      "field": "Industrial Engineering and Management",
+      "directions": ["pmo", "operations", "data-bi", "implementation", "ai-ops", "product-ops"],
+      "supportsEngineering": false
+    },
+    "industrial engineering": {
+      "field": "Industrial Engineering",
+      "directions": ["pmo", "operations", "data-bi", "implementation"],
+      "supportsEngineering": false
+    },
+    "data science": {
+      "field": "Data Science",
+      "directions": ["data-bi", "operations", "ai-ops"],
+      "supportsEngineering": false
+    },
+    "information systems": {
+      "field": "Information Systems",
+      "directions": ["implementation", "data-bi", "pmo", "ai-ops"],
+      "supportsEngineering": false
+    },
+    "computer science": {
+      "field": "Computer Science",
+      "directions": ["engineering", "data-bi", "ai-ops"],
+      "supportsEngineering": true
+    },
+    "software engineering": {
+      "field": "Software Engineering",
+      "directions": ["engineering"],
+      "supportsEngineering": true
+    },
+    "business administration": {
+      "field": "Business Administration",
+      "directions": ["operations", "pmo", "product-ops"],
+      "supportsEngineering": false
+    },
+    "accounting": {
+      "field": "Accounting",
+      "directions": ["finance"],
+      "supportsEngineering": false
+    },
+    "economics": {
+      "field": "Economics",
+      "directions": ["finance", "data-bi", "operations"],
+      "supportsEngineering": false
+    }
+  },
   "avoidKeywords": [
-    "senior developer",
-    "software engineer",
-    "hands-on coding",
     "sales only",
     "commission only",
-    "marketing",
     "internship",
-    "senior manager",
-    "head of",
-    "team lead",
     "architect"
   ],
   "seniority": {

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
-    "match": "node run.mjs"
+    "match": "node run.mjs",
+    "test": "node tests/matcher.test.mjs && node tests/job-quality.test.mjs"
   }
 }

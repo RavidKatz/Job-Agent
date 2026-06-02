@@ -1,3 +1,5 @@
+import { setupAuth } from "./auth.js";
+
 const form = document.querySelector("#matchForm");
 const resumeFile = document.querySelector("#resumeFile");
 const jobsFile = document.querySelector("#jobsFile");
@@ -5,56 +7,46 @@ const resumeFileName = document.querySelector("#resumeFileName");
 const jobsFileName = document.querySelector("#jobsFileName");
 const minimumScore = document.querySelector("#minimumScore");
 const minimumScoreValue = document.querySelector("#minimumScoreValue");
+const thresholdSearchButton = document.querySelector("#thresholdSearchButton");
 const scanButton = document.querySelector("#scanButton");
 const exportButton = document.querySelector("#exportButton");
+const sourceCheckboxes = document.querySelectorAll('input[name="sourceIds"]');
 const statusText = document.querySelector("#statusText");
 const jobsScanned = document.querySelector("#jobsScanned");
 const matchCount = document.querySelector("#matchCount");
 const termCount = document.querySelector("#termCount");
 const generatedAt = document.querySelector("#generatedAt");
+const scanVisual = document.querySelector("#scanVisual");
 const resultsBody = document.querySelector("#resultsBody");
 const sourceLinks = document.querySelector("#sourceLinks");
 const profileSummary = document.querySelector("#profileSummary");
+const profileFacts = document.querySelector("#profileFacts");
 const roleRecommendations = document.querySelector("#roleRecommendations");
-const applicationTrackerBody = document.querySelector("#applicationTrackerBody");
-const addManualApplication = document.querySelector("#addManualApplication");
-const exportTrackerButton = document.querySelector("#exportTrackerButton");
 
 const TRACKER_STORAGE_KEY = "job-agent-application-tracker-v1";
-const TRACKER_STATUSES = [
-  "Saved",
-  "Applied",
-  "Recruiter screen",
-  "Interview scheduled",
-  "Interview completed",
-  "Home assignment",
-  "Follow-up needed",
-  "Offer",
-  "Rejected",
-  "No response",
-  "Withdrawn",
-  "Closed"
-];
 
 let latestCsv = "";
 let latestMatches = [];
+let latestNearMatches = [];
 let trackedApplications = loadTracker();
+let auth = null;
 
 function isRealApplyUrl(value) {
   const text = String(value ?? "").trim();
   return text.startsWith("http://") || text.startsWith("https://");
 }
 
-function renderApplyAction(match, index) {
+function renderApplyAction(match, index, isNear = false) {
   const directAction = isRealApplyUrl(match.applyUrl)
-    ? `<a class="apply-link" href="${escapeAttribute(match.applyUrl)}" target="_blank" rel="noreferrer">Open role</a>`
+    ? `<a class="apply-link" href="${escapeAttribute(match.applyUrl)}" target="_blank" rel="noreferrer">View job</a>`
     : `<span class="muted-action">No direct link</span>`;
   const isTracked = isTrackedMatch(match);
+  const indexAttr = isNear ? `data-near-index="${index}"` : `data-track-index="${index}"`;
 
   return `
     <div class="application-actions">
       ${directAction}
-      <button class="track-job-button" type="button" data-track-index="${index}" ${isTracked ? "disabled" : ""}>
+      <button class="track-job-button" type="button" ${indexAttr} ${isTracked ? "disabled" : ""}>
         ${isTracked ? "Tracked" : "Track"}
       </button>
     </div>
@@ -66,6 +58,26 @@ function setStatus(text, isError = false) {
   statusText.classList.toggle("error", isError);
 }
 
+function setScanning(isScanning) {
+  scanVisual?.classList.toggle("is-active", isScanning);
+  document.querySelector(".summary-panel")?.classList.toggle("is-scanning", isScanning);
+}
+
+async function readJsonResponse(response) {
+  const contentType = response.headers.get("content-type") || "";
+  const text = await response.text();
+
+  if (!contentType.includes("application/json")) {
+    throw new Error("The server returned an invalid response. Refresh the page and try again.");
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error("The scan response could not be read. Refresh the page and try again.");
+  }
+}
+
 function formatDate(value) {
   if (!value) return "";
   return new Intl.DateTimeFormat("en-US", {
@@ -74,8 +86,24 @@ function formatDate(value) {
   }).format(new Date(value));
 }
 
+function resetScanResults() {
+  latestCsv = "";
+  latestMatches = [];
+  latestNearMatches = [];
+  jobsScanned.textContent = "0";
+  matchCount.textContent = "0";
+  termCount.textContent = "0";
+  generatedAt.textContent = "";
+  profileSummary.textContent = "Building profile from the uploaded CV...";
+  profileFacts.innerHTML = "";
+  roleRecommendations.innerHTML = "";
+  sourceLinks.innerHTML = "";
+  resultsBody.innerHTML = `<tr><td colspan="6" class="empty-state">Scanning this CV now. Previous results were cleared.</td></tr>`;
+}
+
 function renderMatches(analysis) {
   latestMatches = analysis.matches ?? [];
+  latestNearMatches = analysis.nearMatches ?? [];
   jobsScanned.textContent = analysis.jobsScanned ?? 0;
   matchCount.textContent = latestMatches.length;
   termCount.textContent = analysis.resumeTerms?.length ?? 0;
@@ -84,23 +112,162 @@ function renderMatches(analysis) {
   renderSourceLinks(analysis.sourceLinks ?? []);
 
   if (!latestMatches.length) {
-    resultsBody.innerHTML = `<tr><td colspan="6" class="empty-state">No roles passed the current match threshold</td></tr>`;
+    resultsBody.innerHTML = renderNoMatchesState(analysis);
+    refreshTrackButtons();
     return;
   }
 
   resultsBody.innerHTML = latestMatches.map((match, index) => `
-    <tr>
-      <td><span class="score-pill">${match.matchPercent}%</span></td>
-      <td>${escapeHtml(match.company)}</td>
-      <td>${escapeHtml(match.position)}</td>
-      <td>${escapeHtml(match.location)}</td>
-      <td class="notes">${renderMatchRationale(match)}</td>
-      <td>${renderApplyAction(match, index)}</td>
+    <tr class="job-result-row">
+      <td class="result-fit-cell" data-label="Fit">
+        <span class="score-pill">${match.matchPercent}%</span>
+      </td>
+      <td class="result-company-cell" data-label="Company">${escapeHtml(match.company || "Company not listed")}</td>
+      <td class="result-role-cell" data-label="Role">
+        ${renderRoleTitle(match)}
+        <span class="mobile-result-meta">${escapeHtml(match.source || match.appliedVia || "Unknown source")}</span>
+      </td>
+      <td class="result-location-cell" data-label="Location">${escapeHtml(match.location || "Location not listed")}</td>
+      <td class="notes result-rationale-cell" data-label="Fit rationale">
+        ${renderMobileFitSummary(match)}
+        <div class="desktop-fit-details">${renderMatchRationale(match)}</div>
+      </td>
+      <td class="result-actions-cell" data-label="Actions">${renderApplyAction(match, index)}</td>
     </tr>
   `).join("");
 }
 
+// Renders the no-matches view: a diagnostics summary, and the closest near
+// matches below the threshold when any exist. Never an empty dead end.
+function renderNoMatchesState(analysis) {
+  const near = analysis.nearMatches ?? [];
+  const diagnosticsRow = renderDiagnosticsRow(analysis.diagnostics || {}, near.length > 0);
+  if (!near.length) return diagnosticsRow;
+  return diagnosticsRow + near.map((match, index) => nearMatchRow(match, index)).join("");
+}
+
+function renderDiagnosticsRow(diagnostics, hasNear) {
+  const threshold = diagnostics.threshold ?? "";
+  const highest = diagnostics.highestScore ?? 0;
+  const headline = hasNear
+    ? "אף משרה לא עברה את הסף שנבחר, אך אלה ההתאמות הקרובות ביותר."
+    : "אף משרה לא עברה את הסף שנבחר.";
+  const suggestion = (highest > 0 && threshold !== "" && highest < threshold)
+    ? `כדאי לנסות להוריד את הסף לכ-${escapeHtml(String(highest))}% כדי לראות התאמות קרובות.`
+    : "";
+  const failureReasons = (diagnostics.topFailureReasons ?? [])
+    .map((item) => `${escapeHtml(item.reason)} (${escapeHtml(String(item.count))})`)
+    .join(" | ");
+  const sourceWarnings = (diagnostics.sourceWarnings ?? []).map(escapeHtml).join(" | ");
+  const searchTerms = (diagnostics.searchTerms ?? []).slice(0, 8).map(escapeHtml).join(", ");
+
+  const lines = [
+    `<p class="diag-headline">${headline}</p>`,
+    `<p><b>סף שנבחר</b>${escapeHtml(String(threshold))}%</p>`,
+    `<p><b>הציון הגבוה ביותר</b>${escapeHtml(String(highest))}%</p>`,
+    `<p><b>נסרקו / קיבלו ציון</b>${escapeHtml(String(diagnostics.jobsScanned ?? 0))} / ${escapeHtml(String(diagnostics.jobsScored ?? 0))}</p>`,
+    `<p><b>ציון ממוצע</b>${escapeHtml(String(diagnostics.averageScore ?? 0))}%</p>`,
+    suggestion ? `<p class="diag-suggestion">${suggestion}</p>` : "",
+    searchTerms ? `<p><b>מונחי חיפוש שנוצרו</b>${searchTerms}</p>` : "",
+    failureReasons ? `<p><b>סיבות עיקריות לאי-התאמה</b>${failureReasons}</p>` : "",
+    sourceWarnings ? `<p><b>אזהרות מקור</b>${sourceWarnings}</p>` : ""
+  ].filter(Boolean).join("");
+
+  return `<tr class="diagnostics-row"><td colspan="6" dir="rtl"><div class="diagnostics-box">${lines}</div></td></tr>`;
+}
+
+function nearMatchRow(match, index) {
+  return `
+    <tr class="job-result-row near-match-row">
+      <td class="result-fit-cell" data-label="Fit">
+        <span class="score-pill score-pill-near">${match.matchPercent}%</span>
+        <span class="near-badge">מתחת לסף</span>
+      </td>
+      <td class="result-company-cell" data-label="Company">${escapeHtml(match.company || "Company not listed")}</td>
+      <td class="result-role-cell" data-label="Role">
+        ${renderRoleTitle(match)}
+        <span class="mobile-result-meta">${escapeHtml(match.source || match.appliedVia || "Unknown source")}</span>
+      </td>
+      <td class="result-location-cell" data-label="Location">${escapeHtml(match.location || "Location not listed")}</td>
+      <td class="notes result-rationale-cell" data-label="Fit rationale">
+        <p class="near-reason" dir="rtl"><b>למה לא עבר את הסף</b>${escapeHtml(match.reason || "")}</p>
+        ${renderMobileFitSummary(match)}
+        <div class="desktop-fit-details">${renderMatchRationale(match)}</div>
+      </td>
+      <td class="result-actions-cell" data-label="Actions">${renderApplyAction(match, index, true)}</td>
+    </tr>
+  `;
+}
+
+function renderRoleTitle(match) {
+  const title = escapeHtml(match.position || "Untitled role");
+  if (!isRealApplyUrl(match.applyUrl)) {
+    return `
+      <strong class="mobile-result-title">${title}</strong>
+      <span class="desktop-result-title">${title}</span>
+    `;
+  }
+
+  const url = escapeAttribute(match.applyUrl);
+  return `
+    <a class="mobile-result-title result-title-link" href="${url}" target="_blank" rel="noreferrer">${title}</a>
+    <a class="desktop-result-title result-title-link" href="${url}" target="_blank" rel="noreferrer">${title}</a>
+  `;
+}
+
+const FIT_LABEL_HE = { High: "התאמה גבוהה", Medium: "התאמה בינונית", Low: "התאמה נמוכה" };
+const RELIABILITY_HE = { high: "מקור אמין", medium: "מקור בינוני", low: "מקור חלש" };
+
+function renderQualityNote(match) {
+  const quality = match.dataQuality;
+  if (!quality) return "";
+  const reliability = RELIABILITY_HE[quality.sourceReliability] || quality.sourceReliability || "";
+  const warnings = Array.isArray(quality.qualityWarnings) ? quality.qualityWarnings : [];
+  const showWarnings = warnings.length && (quality.dataQualityScore < 60 || quality.isSearchShortcut);
+  const warningLine = showWarnings
+    ? `<p class="quality-warning"><b>איכות נתונים</b>${escapeHtml(warnings.join(" | "))}</p>`
+    : "";
+  return `
+    <p><b>מקור</b>${escapeHtml(reliability)} (${escapeHtml(String(quality.dataQualityScore))}/100)</p>
+    ${warningLine}
+  `;
+}
+
+function renderMobileFitSummary(match) {
+  const fit = match.fitAnalysis || {};
+  return `
+    <div class="mobile-fit-summary" dir="rtl">
+      <p><b>רמת התאמה</b>${escapeHtml(FIT_LABEL_HE[fit.fitLabel] || fit.fitLabel || "")}</p>
+      <p><b>למה מתאים</b>${escapeHtml(match.mainFit || fit.whyFits || "לא זוהו סימני התאמה")}</p>
+      <p><b>מה חסר</b>${escapeHtml(match.mainGap || fit.whatsMissing || "לא זוהה פער")}</p>
+      <p><b>המלצה</b>${escapeHtml(fit.finalRecommendationHe || match.recommendedAction || "לבדוק את המשרה")}</p>
+    </div>
+  `;
+}
+
 function renderMatchRationale(match) {
+  const fit = match.fitAnalysis;
+  if (fit) {
+    return `
+      <div class="fit-analysis" dir="rtl">
+        <div class="fit-meta">
+          <span>${escapeHtml(FIT_LABEL_HE[fit.fitLabel] || fit.fitLabel || "")}</span>
+          <span>${escapeHtml(match.category || "ללא קטגוריה")}</span>
+          <span>${escapeHtml(fit.requirementCoverage || "כיסוי לא זוהה")}</span>
+        </div>
+        <p><b>סיכום</b>${escapeHtml(fit.hebrewSummary || "")}</p>
+        <p><b>למה זה מתאים</b>${escapeHtml(fit.whyFits || "")}</p>
+        <p><b>מה חסר</b>${escapeHtml(fit.whatsMissing || "")}</p>
+        <p><b>איך התפקיד האחרון תומך</b>${escapeHtml(fit.recentRoleSupport || "")}</p>
+        <p><b>איך ההשכלה תומכת</b>${escapeHtml(fit.educationSupport || "")}</p>
+        <p><b>סיכונים ופערים</b>${escapeHtml(fit.risks || "")}</p>
+        <p><b>התאמת קורות החיים</b>${escapeHtml(fit.cvTailoring || "")}</p>
+        <p><b>המלצה סופית</b>${escapeHtml(fit.finalRecommendationHe || "")}</p>
+        ${renderQualityNote(match)}
+      </div>
+    `;
+  }
+
   const parts = [];
   if (match.notes) {
     parts.push(`<span>${escapeHtml(match.notes)}</span>`);
@@ -123,6 +290,7 @@ function renderProfile(profile) {
     : `${profile.yearsExperience} years of experience`;
   const terms = (profile.matchedTerms ?? []).slice(0, 8).join(", ");
   profileSummary.textContent = `${yearsText}. Seniority: ${profile.seniority}. Detected signals: ${terms || "No strong signals detected yet"}.`;
+  profileFacts.innerHTML = renderProfileFacts(profile);
 
   const roles = profile.roleRecommendations ?? [];
   if (!roles.length) {
@@ -142,9 +310,26 @@ function renderProfile(profile) {
   `).join("");
 }
 
+function renderProfileFacts(profile) {
+  const topRole = profile.roleRecommendations?.[0];
+  const searchTerms = (profile.searchTerms ?? []).slice(0, 4);
+  const matchedTerms = (profile.matchedTerms ?? []).slice(0, 6);
+
+  return [
+    ["Best direction", topRole ? `${topRole.title} (${topRole.score}%)` : "Not detected yet"],
+    ["Search terms", searchTerms.length ? searchTerms.join(", ") : "No terms yet"],
+    ["Profile evidence", matchedTerms.length ? matchedTerms.join(", ") : "No evidence yet"]
+  ].map(([label, value]) => `
+    <article class="profile-fact-card">
+      <span>${escapeHtml(label)}</span>
+      <strong>${escapeHtml(value)}</strong>
+    </article>
+  `).join("");
+}
+
 function renderSourceLinks(links) {
   if (!links.length) {
-    sourceLinks.innerHTML = `<span class="empty-state inline">No search shortcuts yet</span>`;
+    sourceLinks.innerHTML = `<span class="empty-state inline">Search shortcuts appear after a scan.</span>`;
     return;
   }
 
@@ -155,56 +340,18 @@ function renderSourceLinks(links) {
   `).join("");
 }
 
-function renderTracker() {
-  exportTrackerButton.disabled = !trackedApplications.length;
-
-  if (!trackedApplications.length) {
-    applicationTrackerBody.innerHTML = `<tr><td colspan="8" class="empty-state">No tracked applications yet</td></tr>`;
+async function loadServerApplications() {
+  if (!auth?.currentUser) return;
+  try {
+    const response = await fetch("/api/applications");
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || "Could not load applications.");
+    trackedApplications = (payload.applications ?? []).map(normalizeTrackerItem);
+    persistTracker();
     refreshTrackButtons();
-    return;
+  } catch (error) {
+    setStatus(error.message, true);
   }
-
-  applicationTrackerBody.innerHTML = trackedApplications.map((item) => `
-    <tr>
-      <td>
-        <select class="status-select" data-tracker-id="${escapeAttribute(item.id)}" data-tracker-field="status">
-          ${renderStatusOptions(item.status)}
-        </select>
-      </td>
-      <td>
-        <input class="tracker-input" data-tracker-id="${escapeAttribute(item.id)}" data-tracker-field="company" value="${escapeAttribute(item.company)}" placeholder="Company">
-      </td>
-      <td>
-        <input class="tracker-input" data-tracker-id="${escapeAttribute(item.id)}" data-tracker-field="role" value="${escapeAttribute(item.role)}" placeholder="Role">
-        <small>${escapeHtml(item.source || "Manual")}</small>
-      </td>
-      <td><span class="score-pill tracker-score">${item.matchPercent ? `${escapeHtml(item.matchPercent)}%` : "Manual"}</span></td>
-      <td>
-        <input class="tracker-date" type="date" data-tracker-id="${escapeAttribute(item.id)}" data-tracker-field="updatedAt" value="${escapeAttribute(item.updatedAt)}">
-      </td>
-      <td>
-        <input class="tracker-input wide" data-tracker-id="${escapeAttribute(item.id)}" data-tracker-field="nextStep" value="${escapeAttribute(item.nextStep)}" placeholder="Next step or note">
-      </td>
-      <td>
-        <div class="tracker-link-cell">
-          <input class="tracker-input wide" data-tracker-id="${escapeAttribute(item.id)}" data-tracker-field="applyUrl" value="${escapeAttribute(item.applyUrl)}" placeholder="Application URL">
-          ${isRealApplyUrl(item.applyUrl) ? `<a class="apply-link compact" href="${escapeAttribute(item.applyUrl)}" target="_blank" rel="noreferrer">Open</a>` : ""}
-        </div>
-      </td>
-      <td>
-        <button class="remove-tracker-button" type="button" data-tracker-id="${escapeAttribute(item.id)}">Remove</button>
-      </td>
-    </tr>
-  `).join("");
-
-  refreshTrackButtons();
-}
-
-function renderStatusOptions(selectedStatus) {
-  const currentStatus = TRACKER_STATUSES.includes(selectedStatus) ? selectedStatus : "Saved";
-  return TRACKER_STATUSES.map((status) => `
-    <option value="${escapeAttribute(status)}" ${status === currentStatus ? "selected" : ""}>${escapeHtml(status)}</option>
-  `).join("");
 }
 
 function loadTracker() {
@@ -217,10 +364,22 @@ function loadTracker() {
   }
 }
 
-function persistTracker({ rerender = true } = {}) {
+function persistTracker() {
   localStorage.setItem(TRACKER_STORAGE_KEY, JSON.stringify(trackedApplications));
-  exportTrackerButton.disabled = !trackedApplications.length;
-  if (rerender) renderTracker();
+}
+
+async function saveTrackerItem(item) {
+  if (!auth?.currentUser) return;
+  const response = await fetch("/api/applications", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      ...item,
+      fitPercent: item.matchPercent
+    })
+  });
+  const payload = await response.json();
+  if (!response.ok) throw new Error(payload.error || "Could not save application.");
 }
 
 function normalizeTrackerItem(item) {
@@ -229,16 +388,29 @@ function normalizeTrackerItem(item) {
     company: String(item.company || ""),
     role: String(item.role || item.position || ""),
     source: String(item.source || "Manual"),
-    matchPercent: item.matchPercent ? String(item.matchPercent) : "",
+    matchPercent: item.matchPercent || item.fitPercent ? String(item.matchPercent || item.fitPercent) : "",
+    category: String(item.category || ""),
+    priority: String(item.priority || ""),
+    location: String(item.location || ""),
+    workModel: String(item.workModel || ""),
+    mainFit: String(item.mainFit || ""),
+    mainGap: String(item.mainGap || ""),
+    recommendedAction: String(item.recommendedAction || ""),
     applyUrl: String(item.applyUrl || ""),
-    status: TRACKER_STATUSES.includes(item.status) ? item.status : "Saved",
+    status: String(item.status || "Saved"),
     updatedAt: String(item.updatedAt || today()),
     nextStep: String(item.nextStep || ""),
     addedAt: String(item.addedAt || new Date().toISOString())
   };
 }
 
-function addMatchToTracker(match) {
+async function addMatchToTracker(match) {
+  if (!auth?.currentUser) {
+    setStatus("Create an account to save this role into your application dashboard.", true);
+    document.querySelector("#authPanel")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+
   if (isTrackedMatch(match)) {
     refreshTrackButtons();
     return;
@@ -250,47 +422,25 @@ function addMatchToTracker(match) {
       role: match.position,
       source: match.source,
       matchPercent: match.matchPercent,
+      category: match.category,
+      priority: match.priority,
+      location: match.location,
+      workModel: match.workModel,
+      mainFit: match.mainFit,
+      mainGap: match.mainGap,
+      recommendedAction: match.recommendedAction,
       applyUrl: match.applyUrl,
       status: "Saved",
-      nextStep: "Review and apply",
+      nextStep: match.recommendedAction || "Review and apply",
       updatedAt: today()
     }),
     ...trackedApplications
   ];
 
   persistTracker();
-  setStatus("Added to application tracker");
-}
-
-function addManualTrackerRow() {
-  trackedApplications = [
-    normalizeTrackerItem({
-      status: "Saved",
-      source: "Manual",
-      updatedAt: today(),
-      nextStep: "Add details"
-    }),
-    ...trackedApplications
-  ];
-
-  persistTracker();
-}
-
-function removeTrackerItem(id) {
-  trackedApplications = trackedApplications.filter((item) => item.id !== id);
-  persistTracker();
-}
-
-function updateTrackerItem(id, field, value) {
-  const item = trackedApplications.find((entry) => entry.id === id);
-  if (!item) return;
-  item[field] = value;
-  if (field === "status") {
-    item.updatedAt = today();
-    persistTracker();
-    return;
-  }
-  persistTracker({ rerender: false });
+  refreshTrackButtons();
+  await saveTrackerItem(trackedApplications[0]);
+  setStatus("Saved to the dedicated application dashboard");
 }
 
 function isTrackedMatch(match) {
@@ -310,31 +460,14 @@ function trackerKey(item) {
 
 function refreshTrackButtons() {
   document.querySelectorAll(".track-job-button").forEach((button) => {
-    const match = latestMatches[Number(button.dataset.trackIndex)];
+    const match = button.dataset.nearIndex != null
+      ? latestNearMatches[Number(button.dataset.nearIndex)]
+      : latestMatches[Number(button.dataset.trackIndex)];
     if (!match) return;
     const isTracked = isTrackedMatch(match);
     button.disabled = isTracked;
     button.textContent = isTracked ? "Tracked" : "Track";
   });
-}
-
-function exportTrackerCsv() {
-  if (!trackedApplications.length) return;
-  const csv = toCsv([
-    ["Status", "Company", "Role", "Source", "Fit", "Last update", "Next step", "Apply URL", "Added at"],
-    ...trackedApplications.map((item) => [
-      item.status,
-      item.company,
-      item.role,
-      item.source,
-      item.matchPercent ? `${item.matchPercent}%` : "",
-      item.updatedAt,
-      item.nextStep,
-      item.applyUrl,
-      item.addedAt
-    ])
-  ]);
-  downloadTextFile(`\uFEFF${csv}`, "application-tracker.csv", "text/csv;charset=utf-8");
 }
 
 function toCsv(rows) {
@@ -386,8 +519,24 @@ function updateFileLabels() {
   jobsFileName.textContent = jobsFile.files[0]?.name || "Optional JSON file";
 }
 
+function getSelectedSourceIds() {
+  return [...sourceCheckboxes]
+    .filter((checkbox) => checkbox.checked)
+    .map((checkbox) => checkbox.value);
+}
+
 minimumScore.addEventListener("input", () => {
   minimumScoreValue.textContent = `${minimumScore.value}%`;
+});
+
+thresholdSearchButton?.addEventListener("click", () => {
+  if (!resumeFile.files[0]) {
+    setStatus("Upload a resume before searching with the selected threshold.", true);
+    form.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+
+  form.requestSubmit();
 });
 
 resumeFile.addEventListener("change", updateFileLabels);
@@ -396,37 +545,23 @@ jobsFile.addEventListener("change", updateFileLabels);
 resultsBody.addEventListener("click", (event) => {
   const button = event.target.closest(".track-job-button");
   if (!button) return;
-  const match = latestMatches[Number(button.dataset.trackIndex)];
+  const match = button.dataset.nearIndex != null
+    ? latestNearMatches[Number(button.dataset.nearIndex)]
+    : latestMatches[Number(button.dataset.trackIndex)];
   if (match) addMatchToTracker(match);
 });
 
-applicationTrackerBody.addEventListener("input", (event) => {
-  const field = event.target.dataset.trackerField;
-  const id = event.target.dataset.trackerId;
-  if (!field || !id) return;
-  updateTrackerItem(id, field, event.target.value);
-});
-
-applicationTrackerBody.addEventListener("change", (event) => {
-  const field = event.target.dataset.trackerField;
-  const id = event.target.dataset.trackerId;
-  if (!field || !id) return;
-  updateTrackerItem(id, field, event.target.value);
-  if (field === "applyUrl") renderTracker();
-});
-
-applicationTrackerBody.addEventListener("click", (event) => {
-  const button = event.target.closest(".remove-tracker-button");
-  if (!button) return;
-  removeTrackerItem(button.dataset.trackerId);
-});
-
-addManualApplication.addEventListener("click", addManualTrackerRow);
-exportTrackerButton.addEventListener("click", exportTrackerCsv);
-
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
+  const selectedSourceIds = getSelectedSourceIds();
+  if (!selectedSourceIds.length && !jobsFile.files[0]) {
+    setStatus("Select at least one job source before running the scan.", true);
+    return;
+  }
+
   setStatus("Scanning role fit...");
+  resetScanResults();
+  setScanning(true);
   scanButton.disabled = true;
   exportButton.disabled = true;
 
@@ -434,6 +569,7 @@ form.addEventListener("submit", async (event) => {
     const formData = new FormData();
     formData.append("resume", resumeFile.files[0]);
     formData.append("minimumScore", minimumScore.value);
+    formData.append("sourceIds", JSON.stringify(selectedSourceIds));
     if (jobsFile.files[0]) {
       formData.append("jobsFile", jobsFile.files[0]);
     }
@@ -442,7 +578,7 @@ form.addEventListener("submit", async (event) => {
       method: "POST",
       body: formData
     });
-    const payload = await response.json();
+    const payload = await readJsonResponse(response);
 
     if (!response.ok) {
       throw new Error(payload.error || "The scan failed");
@@ -455,6 +591,7 @@ form.addEventListener("submit", async (event) => {
   } catch (error) {
     setStatus(error.message, true);
   } finally {
+    setScanning(false);
     scanButton.disabled = false;
   }
 });
@@ -464,4 +601,15 @@ exportButton.addEventListener("click", () => {
   downloadTextFile(latestCsv, "job-matches.csv", "text/csv;charset=utf-8");
 });
 
-renderTracker();
+auth = await setupAuth({
+  onUserChange(user) {
+    if (user) {
+      scanButton.disabled = false;
+      setStatus("Account connected. You can scan and save roles to the dashboard.");
+      loadServerApplications();
+      return;
+    }
+    scanButton.disabled = false;
+    setStatus("Upload a resume to scan. Create an account later to save your dashboard.");
+  }
+});

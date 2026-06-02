@@ -31,15 +31,28 @@ function escapeCsv(value) {
 export function toCsv(rows) {
   const headers = [
     "Company",
-    "Position",
-    "Estimated Match (%)",
+    "Role",
+    "Category",
+    "Fit %",
+    "Priority",
     "Status",
-    "Applied Via",
-    "Apply Link",
+    "Source",
     "Location",
-    "Posted At",
+    "Work Model",
+    "Main Fit",
+    "Main Gap",
+    "Recommended Action",
     "Notes",
-    "Warnings"
+    "Apply Link",
+    "Posted At",
+    "Confidence",
+    "Requirement Coverage",
+    "Experience Fit",
+    "Warnings",
+    "Must-have Fit",
+    "Role Substance Fit",
+    "Career Direction Fit",
+    "Market Competitiveness"
   ];
 
   const lines = [headers.join(",")];
@@ -47,14 +60,27 @@ export function toCsv(rows) {
     lines.push([
       row.company,
       row.position,
+      row.category,
       `${row.matchPercent}%`,
+      row.priority,
       row.status,
-      row.appliedVia,
-      row.applyUrl,
+      row.source || row.appliedVia,
       row.location,
-      row.postedAt,
+      row.workModel,
+      row.mainFit,
+      row.mainGap,
+      row.recommendedAction,
       row.notes,
-      row.warnings
+      row.applyUrl,
+      row.postedAt,
+      row.fitAnalysis?.confidence,
+      row.fitAnalysis?.requirementCoverage,
+      row.fitAnalysis?.experienceFit,
+      row.warnings,
+      row.matchBreakdown?.mustHaveFit,
+      row.matchBreakdown?.roleSubstanceFit,
+      row.matchBreakdown?.careerDirectionFit,
+      row.matchBreakdown?.marketCompetitiveness
     ].map(escapeCsv).join(","));
   }
   return `${lines.join("\n")}\n`;

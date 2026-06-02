@@ -10,12 +10,25 @@ function buildUrl(template, term) {
 export function buildSearchPageLinks(source) {
   const terms = normalizeTerms(source.searchTerms ?? []);
   const maxQueries = source.maxQueries ?? 4;
+  const directLinks = buildDirectSourceLinks(source);
 
-  return terms.slice(0, maxQueries).map((term) => ({
+  const searchLinks = terms.slice(0, maxQueries).map((term) => ({
     sourceId: source.id,
     sourceName: source.name ?? source.id,
     label: `${source.name ?? source.id}: ${term}`,
     query: term,
     url: buildUrl(source.urlTemplate, term)
   }));
+
+  return [...directLinks, ...searchLinks];
+}
+
+export function buildDirectSourceLinks(source) {
+  return (source.directLinks ?? []).map((link) => ({
+    sourceId: source.id,
+    sourceName: source.name ?? source.id,
+    label: link.label ?? `${source.name ?? source.id}: curated search`,
+    query: link.query ?? "",
+    url: link.url
+  })).filter((link) => link.url);
 }

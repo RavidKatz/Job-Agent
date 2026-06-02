@@ -7,259 +7,209 @@
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
-    <div class="ambient-stage" aria-hidden="true">
-      <span class="ambient-orb orb-one"></span>
-      <span class="ambient-orb orb-two"></span>
-      <span class="ambient-orb orb-three"></span>
-      <span class="grid-sheen"></span>
-    </div>
     <main class="app-shell">
       <header class="topbar">
         <a class="brand-mark" href="/" aria-label="Job Agent home">
           <span class="brand-glyph">JA</span>
-          <span>
-            <strong>Job Agent</strong>
-            <small>Resume intelligence workspace</small>
-          </span>
+          <strong>Job Agent</strong>
         </a>
-        <div class="topbar-meta">
-          <span>Workspace</span>
-          <a href="/">Scanner</a>
+        <nav class="topbar-meta" aria-label="Main">
+          <a href="/" aria-current="page">Scan</a>
           <a href="/tracker.html">Applications</a>
           <button id="logoutButton" class="topbar-button" type="button" hidden>Logout</button>
-        </div>
+        </nav>
       </header>
 
       <div id="mainWorkspace" class="product-workspace">
-      <section class="command-center">
-        <div class="hero-copy">
-          <p class="eyebrow">Resume-first matching</p>
-          <h1>Find roles that fit the person behind the resume.</h1>
-          <p class="hero-subtitle">
-            Upload a resume, infer the strongest role directions, scan live job sources, and rank opportunities by fit.
-          </p>
-          <div class="hero-actions">
-            <a class="primary-link" href="#matchForm">Start a scan</a>
-            <span class="signal-line">Profile signals, source coverage, and direct application links in one workspace.</span>
-          </div>
-          <div class="workflow-ribbon" aria-label="Workflow">
-            <span>Parse CV</span>
-            <span>Build profile</span>
-            <span>Score jobs</span>
-            <span>Track pipeline</span>
-          </div>
-          <div class="hero-stats" aria-label="Matching workflow highlights">
-            <span><strong>75%+</strong> fit threshold</span>
-            <span><strong>4</strong> source channels</span>
-            <span><strong>Fast</strong> CSV export</span>
-          </div>
-        </div>
+        <section class="intro-banner">
+          <h1>Upload a CV and find matching jobs.</h1>
+          <p>Score real fit, then save roles to your dashboard.</p>
+        </section>
 
-        <div class="hero-visual" aria-label="Matching engine preview">
-          <div class="visual-card score-card">
-            <div class="visual-card-head">
-              <span>Fit engine</span>
-              <strong>Live</strong>
+        <section class="workspace-grid">
+          <form id="matchForm" class="upload-panel">
+            <div class="panel-heading">
+              <h2>Scan</h2>
+              <p>Upload a CV, pick sources, and search.</p>
             </div>
-            <div class="score-orbit">
-              <span>92%</span>
-              <small>best match preview</small>
-            </div>
-            <div class="match-bars" aria-hidden="true">
-              <span style="--bar: 92%"></span>
-              <span style="--bar: 84%"></span>
-              <span style="--bar: 78%"></span>
-            </div>
-            <div class="score-control" aria-label="Match threshold">
+
+            <label class="drop-zone" for="resumeFile">
+              <span class="drop-title">CV file</span>
+              <span id="resumeFileName" class="drop-meta">PDF, DOCX, TXT, or MD</span>
+              <input id="resumeFile" name="resume" type="file" accept=".pdf,.docx,.txt,.md" required>
+            </label>
+
+            <div class="score-control">
               <label for="minimumScore">Match threshold</label>
               <div class="range-row">
-                <input id="minimumScore" type="range" min="50" max="95" value="75">
-                <output id="minimumScoreValue" for="minimumScore">75%</output>
+                <input id="minimumScore" type="range" min="50" max="95" value="60">
+                <output id="minimumScoreValue" for="minimumScore">60%</output>
               </div>
-              <p>Only roles above this score appear in the shortlist.</p>
+              <p class="field-hint">Show jobs above this score.</p>
             </div>
-          </div>
-          <div class="visual-card pipeline-card">
-            <div class="visual-card-head">
-              <span>Source pipeline</span>
-              <strong>Israel</strong>
+
+            <fieldset class="source-picker">
+              <legend>Job sources</legend>
+              <div class="source-picker-grid">
+                <label>
+                  <input type="checkbox" name="sourceIds" value="hiremetech" checked>
+                  <span>HireMeTech</span>
+                </label>
+                <label>
+                  <input type="checkbox" name="sourceIds" value="alljobs-search" checked>
+                  <span>AllJobs</span>
+                </label>
+                <label>
+                  <input type="checkbox" name="sourceIds" value="drushim-search" checked>
+                  <span>Drushim</span>
+                </label>
+                <label>
+                  <input type="checkbox" name="sourceIds" value="linkedin-search" checked>
+                  <span>LinkedIn</span>
+                </label>
+                <label>
+                  <input type="checkbox" name="sourceIds" value="remotive">
+                  <span>Remotive</span>
+                </label>
+                <label>
+                  <input type="checkbox" name="sourceIds" value="himalayas">
+                  <span>Himalayas</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <details class="advanced-options">
+              <summary>Advanced options</summary>
+              <label class="drop-zone secondary" for="jobsFile">
+                <span class="drop-title">Custom jobs (JSON)</span>
+                <span id="jobsFileName" class="drop-meta">Optional</span>
+                <input id="jobsFile" name="jobsFile" type="file" accept=".json">
+              </label>
+            </details>
+
+            <div class="actions-row">
+              <button id="scanButton" type="submit">Search jobs</button>
+              <button id="thresholdSearchButton" class="ghost-button" type="button">Re-run at threshold</button>
+              <button id="exportButton" type="button" disabled>Export CSV</button>
             </div>
-            <div class="pipeline-list">
-              <span>HireMeTech</span>
-              <span>Remotive</span>
-              <span>Himalayas</span>
-              <span>Drushim curated</span>
-              <span>LinkedIn search</span>
+
+            <p class="beta-privacy-notice">
+              <span>Private beta. Your CV is used only for analysis and deleted after processing.</span>
+              <span class="privacy-hebrew" lang="he" dir="rtl">גרסת בדיקה פרטית. קובץ קורות החיים משמש לניתוח בלבד ונמחק לאחר העיבוד.</span>
+            </p>
+          </form>
+
+          <aside class="summary-panel" aria-live="polite">
+            <div class="panel-heading compact">
+              <h2>Summary</h2>
             </div>
-            <p>Every match keeps its original apply link when the source provides one.</p>
-          </div>
-          <div class="visual-card insight-card">
-            <span class="insight-dot"></span>
+            <div class="metric-grid">
+              <div class="metric">
+                <span>Jobs scanned</span>
+                <strong id="jobsScanned">0</strong>
+              </div>
+              <div class="metric">
+                <span>Matches</span>
+                <strong id="matchCount">0</strong>
+              </div>
+              <div class="metric">
+                <span>Highest score</span>
+                <strong id="highestScore">—</strong>
+              </div>
+              <div class="metric">
+                <span>Signals</span>
+                <strong id="termCount">0</strong>
+              </div>
+            </div>
+            <div id="scanVisual" class="scan-visual" aria-hidden="true">
+              <span class="scan-spinner"></span>
+              <div>
+                <strong>Searching…</strong>
+                <span>Reading sources and matching your CV.</span>
+              </div>
+            </div>
+            <p id="statusText" class="status-text" role="status">Ready to scan.</p>
+            <span id="generatedAt" class="generated-at"></span>
+          </aside>
+        </section>
+
+        <section class="results-shell">
+          <div class="profile-panel">
             <div>
-              <strong>Smart rationale</strong>
-              <p>Main fit, main gap, and recommended action for every role.</p>
+              <span class="section-kicker">Candidate profile</span>
+              <p id="profileSummary" class="profile-summary">Your profile appears after a scan.</p>
+              <div id="profileFacts" class="profile-facts">
+                <span>Upload a CV to build your profile.</span>
+              </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="experience-strip" aria-label="Product highlights">
-        <article>
-          <span>01</span>
-          <strong>Private profile</strong>
-          <p>Each user gets a personal workspace built from their uploaded resume.</p>
-        </article>
-        <article>
-          <span>02</span>
-          <strong>Precision scoring</strong>
-          <p>Fit is calculated from requirements, role substance, career direction, and market competitiveness.</p>
-        </article>
-        <article>
-          <span>03</span>
-          <strong>Application control</strong>
-          <p>Saved jobs move into a managed tracker with manual status updates.</p>
-        </article>
-      </section>
-
-      <section class="workspace-grid">
-        <form id="matchForm" class="upload-panel">
-          <div class="panel-heading">
-            <span>01</span>
-            <div>
-              <h2>Scan a candidate profile</h2>
-              <p>Use a resume file and optional custom job data.</p>
-            </div>
+            <div id="roleRecommendations" class="role-grid"></div>
           </div>
 
-          <label class="drop-zone" for="resumeFile">
-            <span class="drop-title">Resume file</span>
-            <span id="resumeFileName" class="drop-meta">PDF, DOCX, TXT, or MD</span>
-            <input id="resumeFile" name="resume" type="file" accept=".pdf,.docx,.txt,.md" required>
-          </label>
-
-          <p class="beta-privacy-notice">
-            Private beta version. Please avoid uploading sensitive information if you do not want it processed in this test version. Uploaded CV files are processed for analysis and are not intended to be stored permanently.
-          </p>
-
-          <label class="drop-zone secondary" for="jobsFile">
-            <span class="drop-title">Custom jobs</span>
-            <span id="jobsFileName" class="drop-meta">Optional JSON file</span>
-            <input id="jobsFile" name="jobsFile" type="file" accept=".json">
-          </label>
-
-          <div class="actions-row">
-            <button id="scanButton" type="submit">Run match scan</button>
-            <button id="exportButton" type="button" disabled>Export CSV</button>
+          <div class="results-heading">
+            <span class="section-kicker">Results</span>
+            <span id="generatedAtResults" class="generated-at" hidden></span>
           </div>
-        </form>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fit</th>
+                  <th>Company</th>
+                  <th>Role</th>
+                  <th>Location</th>
+                  <th>Fit rationale</th>
+                  <th>Apply</th>
+                </tr>
+              </thead>
+              <tbody id="resultsBody">
+                <tr>
+                  <td colspan="6" class="empty-state">Upload your CV and search to see matches.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
 
-        <aside class="summary-panel" aria-live="polite">
-          <div class="panel-heading compact">
-            <span>02</span>
-            <div>
-              <h2>Search output</h2>
-              <p>Live summary after each scan.</p>
-            </div>
-          </div>
-          <div class="metric">
-            <span>Jobs scanned</span>
-            <strong id="jobsScanned">0</strong>
-          </div>
-          <div class="metric">
-            <span>Matches</span>
-            <strong id="matchCount">0</strong>
-          </div>
-          <div class="metric">
-            <span>Signals</span>
-            <strong id="termCount">0</strong>
-          </div>
-          <p id="statusText" class="status-text">Ready to scan</p>
-        </aside>
-      </section>
-
-      <section class="results-shell">
-        <div class="profile-panel">
+        <section id="authPanel" class="auth-panel">
           <div>
-            <span class="section-kicker">Profile intelligence</span>
-            <h2>Detected fit profile</h2>
-            <p id="profileSummary" class="profile-summary">The resume profile will appear after the scan.</p>
-            <div id="profileFacts" class="profile-facts">
-              <span>Upload a resume to build the profile.</span>
+            <h2>Save your workspace</h2>
+            <p>Create an account to save roles and manage applications.</p>
+          </div>
+          <form id="authForm" class="auth-form">
+            <label class="field">
+              <span>Full name</span>
+              <input id="displayName" name="displayName" placeholder="Full name">
+            </label>
+            <label class="field">
+              <span>Email or username</span>
+              <input id="username" name="username" autocomplete="username" placeholder="Email or username" required>
+            </label>
+            <label class="field">
+              <span>Password</span>
+              <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Password" required>
+            </label>
+            <div class="auth-actions">
+              <button id="registerButton" type="button">Create account</button>
+              <button id="loginButton" type="submit">Login</button>
             </div>
-          </div>
-          <div id="roleRecommendations" class="role-grid"></div>
-        </div>
+            <p id="authStatus" class="status-text" role="status">Optional. Scan first, then save.</p>
+          </form>
+        </section>
 
-        <div class="results-heading">
-          <div>
-            <span class="section-kicker">Shortlist</span>
-            <h2>Relevant opportunities</h2>
-          </div>
-          <span id="generatedAt"></span>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Fit</th>
-                <th>Company</th>
-                <th>Role</th>
-                <th>Location</th>
-                <th>Fit rationale</th>
-                <th>Apply</th>
-              </tr>
-            </thead>
-            <tbody id="resultsBody">
-              <tr>
-                <td colspan="6" class="empty-state">No scan results yet</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section id="authPanel" class="auth-panel save-workspace-panel">
-        <div>
-          <p class="eyebrow">Save your workspace</p>
-          <h2>Create a profile after seeing your matches</h2>
-          <p>Register when you want to save your profile, manage submitted roles, attach documents, and sync your tracker.</p>
-        </div>
-        <form id="authForm" class="auth-form">
-          <input id="displayName" name="displayName" placeholder="Full name">
-          <input id="username" name="username" autocomplete="username" placeholder="Email or username" required>
-          <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Password" required>
-          <div class="auth-actions">
-            <button id="registerButton" type="button">Create account</button>
-            <button id="loginButton" type="submit">Login</button>
-          </div>
-          <p id="authStatus" class="status-text">Scan first. Create an account when you want to save and manage the process.</p>
-        </form>
-      </section>
-
-      <section class="tracker-cta-shell" aria-labelledby="trackerTitle">
-        <div class="results-heading tracker-heading">
+        <section class="tracker-cta-shell">
           <div>
             <span class="section-kicker">Application pipeline</span>
-            <h2 id="trackerTitle">Manage submitted roles in a dedicated dashboard</h2>
-            <p>Save opportunities from the scan, then open the full dashboard to update statuses and attach application documents.</p>
+            <p>Saved roles move to your dashboard for status tracking.</p>
           </div>
-          <div class="tracker-actions">
-            <a class="primary-link" href="/tracker.html">Open application dashboard</a>
-          </div>
-        </div>
-      </section>
+          <a class="primary-link" href="/tracker.html">Open dashboard</a>
+        </section>
 
-      <section class="source-links-shell">
-        <div class="results-heading">
-          <div>
-            <span class="section-kicker">External search</span>
-            <h2>Search shortcuts</h2>
+        <details class="source-links-shell">
+          <summary>Search shortcuts</summary>
+          <div id="sourceLinks" class="source-links">
+            <span class="empty-state inline">Search shortcuts appear after a scan.</span>
           </div>
-        </div>
-        <div id="sourceLinks" class="source-links">
-          <span class="empty-state inline">No search shortcuts yet</span>
-        </div>
-      </section>
+        </details>
       </div>
     </main>
 

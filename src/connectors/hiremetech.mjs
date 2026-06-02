@@ -1,4 +1,5 @@
 import { fetchJson, normalizeTerms, stripHtml } from "./http.mjs";
+import { normalizeJob } from "./job-model.mjs";
 
 function formatLocation(location) {
   if (!location || typeof location !== "object") return "Israel";
@@ -48,7 +49,8 @@ export async function loadHireMeTechJobs(source) {
     }
 
     for (const job of payload.jobs ?? []) {
-      jobs.push({
+      jobs.push(normalizeJob({
+        id: job.id,
         company: job.company_name || job.company?.name || "",
         title: job.title ?? "",
         location: formatLocation(job.location),
@@ -77,7 +79,7 @@ export async function loadHireMeTechJobs(source) {
           job.general_category,
           job.ai_category
         ].filter(Boolean)
-      });
+      }, source));
     }
   }
 

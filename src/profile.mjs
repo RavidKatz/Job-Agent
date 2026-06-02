@@ -1,5 +1,13 @@
 import { includesPhrase, normalizeText, tokenize, uniqueSorted } from "./text.mjs";
-import { buildDynamicSearchTerms, inferSeniority, inferYearsExperience, recommendRoles } from "./role-recommender.mjs";
+import {
+  buildDynamicSearchTerms,
+  extractEducationProfile,
+  extractLastRoleProfile,
+  extractLatestResumeContext,
+  inferSeniority,
+  inferYearsExperience,
+  recommendRoles
+} from "./role-recommender.mjs";
 
 function matchesConfiguredTerm(normalizedResume, term, aliases = {}) {
   const candidates = [term, ...(aliases[term] ?? [])];
@@ -19,8 +27,11 @@ export function buildResumeProfile(resumeText, config) {
     return matchesConfiguredTerm(normalized, term, config.skillAliases ?? {});
   });
   const yearsExperience = inferYearsExperience(resumeText);
-  const roleRecommendations = recommendRoles(resumeText, config);
-  const dynamicSearchTerms = buildDynamicSearchTerms(roleRecommendations, config);
+  const latestContext = extractLatestResumeContext(resumeText, config);
+  const roleRecommendations = recommendRoles(resumeText, config, latestContext);
+  const dynamicSearchTerms = buildDynamicSearchTerms(roleRecommendations, config, latestContext);
+  const education = extractEducationProfile(resumeText, config);
+  const lastRole = extractLastRoleProfile(resumeText, config);
 
   return {
     text: normalized,
@@ -28,6 +39,10 @@ export function buildResumeProfile(resumeText, config) {
     matchedConfiguredTerms: uniqueSorted(matchedConfiguredTerms),
     yearsExperience,
     seniority: inferSeniority(yearsExperience),
+    latestRole: latestContext.latestRole,
+    latestEducation: latestContext.latestEducation,
+    education,
+    lastRole,
     roleRecommendations,
     dynamicSearchTerms,
     tokenCount: tokens.size
@@ -39,6 +54,10 @@ export function toPublicResumeProfile(resumeProfile) {
     matchedTerms: resumeProfile.matchedConfiguredTerms,
     yearsExperience: resumeProfile.yearsExperience,
     seniority: resumeProfile.seniority,
+    latestRole: resumeProfile.latestRole,
+    latestEducation: resumeProfile.latestEducation,
+    education: resumeProfile.education,
+    lastRole: resumeProfile.lastRole,
     roleRecommendations: resumeProfile.roleRecommendations,
     searchTerms: resumeProfile.dynamicSearchTerms
   };
