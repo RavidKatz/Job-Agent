@@ -1,4 +1,5 @@
 import { includesPhrase, normalizeText, uniqueSorted } from "./text.mjs";
+import { inferJobFamily } from "./role-recommender.mjs";
 
 const REQUIREMENT_CUES = [
   "requirement",
@@ -236,30 +237,6 @@ const ENGINEERING_DEPTH_SIGNALS = [
   "מנהל פיתוח",
   "פיתוח תוכנה",
   "סייבר"
-];
-
-const TARGET_SUBSTANCE_WEIGHTS = [
-  { term: "Requirements Gathering", weight: 3 },
-  { term: "Project tracking", weight: 3 },
-  { term: "Project Control", weight: 3 },
-  { term: "Delivery Management", weight: 3 },
-  { term: "Delivery execution", weight: 3 },
-  { term: "Cross-functional coordination", weight: 3 },
-  { term: "Stakeholder Management", weight: 3 },
-  { term: "PMO", weight: 3 },
-  { term: "Operations", weight: 2 },
-  { term: "Product Operations", weight: 3 },
-  { term: "Process Improvement", weight: 2 },
-  { term: "Dashboard", weight: 2 },
-  { term: "KPI Dashboard", weight: 2 },
-  { term: "Reporting", weight: 2 },
-  { term: "CRM", weight: 2 },
-  { term: "ERP", weight: 2 },
-  { term: "Systems Implementation", weight: 2 },
-  { term: "AI Workflows", weight: 2 },
-  { term: "AI Agent", weight: 2 },
-  { term: "Workflow Automation", weight: 2 },
-  { term: "Data Analysis", weight: 2 }
 ];
 
 const JOB_CATEGORIES = [
@@ -536,20 +513,28 @@ function priorityFromPercent(matchPercent) {
   return "Low-medium fit";
 }
 
-function scoreRoleSubstance(body) {
-  const positiveMatches = collectMatches(body, ROLE_SUBSTANCE_SIGNALS);
-  const negativeMatches = collectMatches(body, NEGATIVE_ROLE_SUBSTANCE);
-  const weightedMatches = TARGET_SUBSTANCE_WEIGHTS
-    .filter((signal) => includesPhrase(body, signal.term));
-  const weightedScore = weightedMatches.reduce((sum, signal) => sum + signal.weight, 0);
-  const positiveScore = Math.min(30, Math.round((positiveMatches.length / 9) * 18) + weightedScore);
+// Candidate-aware role substance. Positive and negative signals come from the
+// candidate's own detected role families (resumeProfile.directionSignals), so a
+// software, finance, or sales CV is scored on its own direction rather than a
+// fixed PMO/ops bias. Falls back to generic lists when the profile is unknown.
+function scoreRoleSubstance(body, resumeProfile) {
+  const positiveTerms = resumeProfile?.directionSignals?.positive?.length
+    ? resumeProfile.directionSignals.positive
+    : ROLE_SUBSTANCE_SIGNALS;
+  const negativeTerms = resumeProfile?.directionSignals?.negative?.length
+    ? resumeProfile.directionSignals.negative
+    : NEGATIVE_ROLE_SUBSTANCE;
+
+  const positiveMatches = collectMatches(body, positiveTerms);
+  const negativeMatches = collectMatches(body, negativeTerms);
+  const positiveScore = Math.min(30, positiveMatches.length * 4);
   const penalty = Math.min(24, negativeMatches.length * 8);
 
   return {
     score: Math.max(0, positiveScore - penalty),
     positiveMatches,
     negativeMatches,
-    weightedMatches: weightedMatches.map((signal) => signal.term)
+    weightedMatches: positiveMatches.slice(0, 8)
   };
 }
 
@@ -903,6 +888,21 @@ const MODEL_WEIGHTS = {
   experienceSeniority: 5 // years of experience and seniority fit
 };
 
+// English category labels per direction, used when the legacy category
+// taxonomy has no entry but the job matches the candidate's direction.
+const DIRECTION_LABEL = {
+  "ai-ops": "AI / Product Ops",
+  "pmo": "PMO",
+  "operations": "Operations",
+  "product-ops": "Product Ops",
+  "implementation": "Implementation",
+  "data-bi": "Data / BI",
+  "engineering": "Software Development",
+  "research": "Research",
+  "finance": "Finance",
+  "general": "General"
+};
+
 // Hebrew labels for the inferred job direction, used in the explanation output.
 const DIRECTION_HE = {
   "ai-ops": "AI ותפעול מוצר",
@@ -994,7 +994,7 @@ function classifyJobDirection({ title, body, archetype, substance, requirementFi
   }
 
   const category = classifyJobCategory(title, body, requirementFit, substance);
-  return {
+  const mapped = {
     "AI / Product Ops": "ai-ops",
     "Technical PMO": "pmo",
     "Delivery & Operations": "operations",
@@ -1002,7 +1002,14 @@ function classifyJobDirection({ title, body, archetype, substance, requirementFi
     "Solutions / Implementation": "implementation",
     "Information Systems": "implementation",
     "Data / BI": "data-bi"
-  }[category] ?? "general";
+  }[category];
+  if (mapped) return mapped;
+
+  // Fall back to the generic role-family taxonomy so directions outside the
+  // legacy PMO/ops categories (engineering, finance, sales, HR, ...) are detected.
+  const family = inferJobFamily(text);
+  if (family && ROLE_FAMILY_DIRECTION[family]) return ROLE_FAMILY_DIRECTION[family];
+  return "general";
 }
 
 // Component 1 (30): alignment with the candidate's most recent role and the
@@ -1051,14 +1058,14 @@ function scoreRecentRoleAlignment({ title, body, resumeProfile, roleFit, jobDire
 // direction floor and a penalty for engineering-heavy day-to-day work.
 function scoreJobEssenceAlignment({ responsibilityText, body, resumeProfile, config, jobDirection, candidateDirections }) {
   const essenceText = `${responsibilityText} ${body}`;
-  const substance = scoreRoleSubstance(essenceText);
+  const substance = scoreRoleSubstance(essenceText, resumeProfile);
   const essenceSignals = collectConfiguredMatches(essenceText, config.coreSkills, config.skillAliases);
   const supported = essenceSignals.filter((term) => hasMatchedResumeTerm(resumeProfile, term));
-  const negatives = collectMatches(essenceText, NEGATIVE_ROLE_SUBSTANCE);
 
   let score = essenceSignals.length ? supported.length / essenceSignals.length : 0.4;
   if (candidateDirections.has(jobDirection)) score = Math.max(score, 0.6);
-  if (negatives.length) score -= Math.min(0.6, negatives.length * 0.3);
+  // Penalize only directions that conflict with this candidate's profile.
+  if (substance.negativeMatches.length) score -= Math.min(0.6, substance.negativeMatches.length * 0.3);
 
   return { score: clamp01(score), substance, supported };
 }
@@ -1257,7 +1264,7 @@ export function scoreJob(job, resumeProfile, config) {
   const jobSeniority = inferJobSeniority(title, body);
 
   // Classify the real direction of the job (engineering/research detected first).
-  const substancePreview = scoreRoleSubstance(responsibilityText || body);
+  const substancePreview = scoreRoleSubstance(responsibilityText || body, resumeProfile);
   const archetype = inferJobArchetype(title, body, substancePreview);
   const jobDirection = classifyJobDirection({ title, body, archetype, substance: substancePreview, requirementFit });
   const candidateEng = candidateSupportsEngineering(resumeProfile);
@@ -1352,7 +1359,13 @@ export function scoreJob(job, resumeProfile, config) {
   });
 
   let category = classifyJobCategory(title, body, requirementFit, essence.substance);
-  if (jobDirection === "engineering" || jobDirection === "research") category = "Not recommended";
+  if ((jobDirection === "engineering" || jobDirection === "research") && !candidateEng) {
+    // Deep dev/research only counts against candidates whose CV does not support it.
+    category = "Not recommended";
+  } else if ((category === "Not recommended" || category === "Backup") && candidateDirections.has(jobDirection)) {
+    // The legacy taxonomy has no label for this direction, but it fits the CV.
+    category = DIRECTION_LABEL[jobDirection] ?? category;
+  }
 
   return {
     company: job.company ?? "",

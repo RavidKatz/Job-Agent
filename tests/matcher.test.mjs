@@ -101,4 +101,65 @@ assert.equal(ranked[0].position, strongPmoAiJob.title, "strong job should rank f
 assert.ok(strong.fitAnalysis.whyFits.length > 0);
 assert.ok(low.fitAnalysis.risks.length > 0);
 
+// --- Candidate-agnostic checks: the engine must adapt to each CV ------------
+
+// Software developer CV: dev roles should fit, PMO should not auto-win.
+const devResume = `
+Professional Experience
+2021 - present | Full Stack Developer, Acme
+Built web applications with React, Node.js, TypeScript and JavaScript. Designed
+REST APIs, wrote unit tests, and shipped features to production. Worked with SQL.
+2019 - 2021 | Frontend Developer, Beta
+Developed React components and frontend features in JavaScript.
+Education
+2015 - 2019 | B.Sc. Computer Science
+`;
+const devProfile = buildResumeProfile(devResume, config);
+
+const devJob = {
+  company: "Code Labs", title: "Backend Developer", location: "Tel Aviv", workMode: "Hybrid",
+  source: "Test", applyUrl: "https://example.com/dev", postedAt: "2026-05-24",
+  description: "Build and maintain backend services in Node.js, design REST APIs, write tests, deploy to production. Requirements: 3+ years software development with JavaScript, TypeScript, React and SQL."
+};
+const pmoJobForDev = {
+  company: "Matrix", title: "Project Manager (PMO)", location: "Tel Aviv", workMode: "Hybrid",
+  source: "Test", applyUrl: "https://example.com/pmo", postedAt: "2026-05-24",
+  description: "Coordinate projects, manage delivery, build KPI dashboards and reports, stakeholder management and process improvement. Requirements: PMO experience with Jira and Monday."
+};
+
+const devOnDev = scoreJob(devJob, devProfile, config);
+const devOnPmo = scoreJob(pmoJobForDev, devProfile, config);
+console.log("dev CV -> dev job:", devOnDev.matchPercent, devOnDev.fitAnalysis.finalRecommendation, "| PMO job:", devOnPmo.matchPercent);
+assert.ok(devOnDev.matchPercent > devOnPmo.matchPercent, "dev CV should prefer the dev job over PMO");
+assert.notEqual(devOnDev.category, "Not recommended", "dev job should not be rejected for a dev CV");
+assert.notEqual(devOnDev.fitAnalysis.finalRecommendation, "Not recommended", "dev job should be viable for a dev CV");
+
+// Finance CV: finance roles should fit better than PMO.
+const financeResume = `
+Professional Experience
+2020 - present | Bookkeeper, Finance Group
+Handled bookkeeping, accounts payable and accounts receivable, payroll, invoices,
+reconciliation and financial statements using SAP and Priority.
+Education
+2016 - 2019 | B.A. Accounting
+`;
+const financeProfile = buildResumeProfile(financeResume, config);
+
+const financeJob = {
+  company: "LedgerCo", title: "Bookkeeper", location: "Tel Aviv", workMode: "On-site",
+  source: "Test", applyUrl: "https://example.com/fin", postedAt: "2026-05-24",
+  description: "Manage bookkeeping, accounts payable and receivable, payroll, invoices and reconciliation. Prepare financial statements. Requirements: experience with SAP or Priority."
+};
+const pmoJobForFinance = { ...pmoJobForDev, applyUrl: "https://example.com/pmo2" };
+
+const finOnFin = scoreJob(financeJob, financeProfile, config);
+const finOnPmo = scoreJob(pmoJobForFinance, financeProfile, config);
+console.log("finance CV -> finance job:", finOnFin.matchPercent, finOnFin.fitAnalysis.finalRecommendation, "| PMO job:", finOnPmo.matchPercent);
+assert.ok(finOnFin.matchPercent > finOnPmo.matchPercent, "finance CV should prefer the finance job over PMO");
+assert.notEqual(finOnFin.fitAnalysis.finalRecommendation, "Not recommended", "finance job should be viable for a finance CV");
+
+// The same PMO job should still score well for the original PMO/AI candidate,
+// proving scores are profile-relative rather than fixed.
+assert.ok(strong.matchPercent > devOnPmo.matchPercent, "PMO job fits the PMO CV better than the dev CV");
+
 console.log("\nAll matcher tests passed.");

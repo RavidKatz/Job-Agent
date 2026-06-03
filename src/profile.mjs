@@ -1,5 +1,6 @@
 import { includesPhrase, normalizeText, tokenize, uniqueSorted } from "./text.mjs";
 import {
+  buildDirectionSignals,
   buildDynamicSearchTerms,
   extractEducationProfile,
   extractLastRoleProfile,
@@ -32,6 +33,7 @@ export function buildResumeProfile(resumeText, config) {
   const dynamicSearchTerms = buildDynamicSearchTerms(roleRecommendations, config, latestContext);
   const education = extractEducationProfile(resumeText, config);
   const lastRole = extractLastRoleProfile(resumeText, config);
+  const directionSignals = buildDirectionSignals(roleRecommendations);
 
   return {
     text: normalized,
@@ -43,6 +45,7 @@ export function buildResumeProfile(resumeText, config) {
     latestEducation: latestContext.latestEducation,
     education,
     lastRole,
+    directionSignals,
     roleRecommendations,
     dynamicSearchTerms,
     tokenCount: tokens.size

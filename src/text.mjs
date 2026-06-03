@@ -43,9 +43,16 @@ export function tokenize(value) {
 }
 
 export function includesPhrase(haystack, phrase) {
-  const normalizedHaystack = ` ${normalizeText(haystack)} `;
-  const normalizedPhrase = ` ${normalizeText(phrase)} `;
-  return normalizedPhrase.trim().length > 0 && normalizedHaystack.includes(normalizedPhrase);
+  const normalizedHaystack = normalizeText(haystack);
+  const normalizedPhrase = normalizeText(phrase);
+  if (!normalizedPhrase) return false;
+  // Match on word boundaries so a term still matches when it is adjacent to
+  // punctuation kept by normalizeText (e.g. "javascript." or "sql,"). Any
+  // non-letter/non-digit counts as a boundary, while terms that legitimately
+  // contain "." "#" "+" "/" "-" (node.js, c#, ci/cd) are matched literally.
+  const escaped = normalizedPhrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const pattern = new RegExp(`(^|[^\\p{L}\\p{N}])${escaped}([^\\p{L}\\p{N}]|$)`, "u");
+  return pattern.test(normalizedHaystack);
 }
 
 export function uniqueSorted(values) {

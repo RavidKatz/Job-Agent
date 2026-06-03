@@ -874,6 +874,48 @@ export function recommendRoles(resumeText, config, latestContext = null) {
     .slice(0, 5);
 }
 
+// Builds candidate-relative substance signals from the detected role families,
+// so the matcher is not biased toward one fixed career direction (e.g. PMO).
+// Positive = signals/titles of the families this CV matches.
+// Negative = role titles of clearly different families this CV does not match.
+export function buildDirectionSignals(roleRecommendations = []) {
+  const recommendedIds = new Set(roleRecommendations.map((role) => role.id));
+  const positive = new Set();
+  const negative = new Set();
+
+  for (const family of ROLE_FAMILIES) {
+    if (!recommendedIds.has(family.id)) continue;
+    for (const term of [...family.signals, ...family.searchTerms]) positive.add(term);
+  }
+
+  for (const family of ROLE_FAMILIES) {
+    if (recommendedIds.has(family.id)) continue;
+    for (const term of family.searchTerms) {
+      if (!positive.has(term)) negative.add(term);
+    }
+  }
+
+  return { positive: uniqueSorted([...positive]), negative: uniqueSorted([...negative]) };
+}
+
+// Classifies a job's text to the best-matching role family (generic taxonomy),
+// so job direction is inferred the same data-driven way as the candidate's.
+export function inferJobFamily(text) {
+  const normalized = normalizeText(text);
+  if (!normalized) return null;
+  let bestId = null;
+  let bestScore = 0;
+  for (const family of ROLE_FAMILIES) {
+    const score = [...family.signals, ...family.searchTerms]
+      .filter((term) => includesPhrase(normalized, term)).length;
+    if (score > bestScore) {
+      bestScore = score;
+      bestId = family.id;
+    }
+  }
+  return bestScore >= 2 ? bestId : null;
+}
+
 export function buildDynamicSearchTerms(recommendations, config, latestContext = null) {
   const topScore = recommendations[0]?.score ?? 0;
   const selectedRecommendations = recommendations.filter((role) => {
