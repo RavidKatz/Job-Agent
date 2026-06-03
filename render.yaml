@@ -1,0 +1,25 @@
+# Render Blueprint for Job Agent (https://render.com).
+# Connect this GitHub repo in Render and it deploys automatically on every push.
+#
+# Notes:
+# - `plan: starter` keeps the service always on (the free plan sleeps when idle).
+# - The persistent disk keeps data/app-db.json (accounts + saved applications)
+#   across deploys and restarts. Disks require a paid instance type.
+# - Render provides PORT and HTTPS automatically; the server already reads PORT.
+services:
+  - type: web
+    name: job-agent
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: HOST
+        value: 0.0.0.0
+      - key: PYTHON_EXE
+        value: /opt/venv/bin/python3
+    disk:
+      name: job-agent-data
+      mountPath: /app/data
+      sizeGB: 1

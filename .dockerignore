@@ -1,0 +1,18 @@
+# Version control and local tooling
+.git
+.gitignore
+.vscode
+
+# Local runtime data (use a mounted persistent disk in production)
+uploads
+data/app-db.json
+
+# Local scratch / test artifacts
+.tmp-*
+tests
+
+# Windows-only helper scripts
+*.ps1
+
+# Docs not needed inside the image
+DEPLOY.md
