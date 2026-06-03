@@ -2542,3 +2542,188 @@ tbody tr:hover {
   font-size: 0.72rem;
   letter-spacing: 0.04em;
 }
+
+/* =========================================================================
+   UI redesign: cleaner main page, result cards, dashboard cards, a11y/states
+   ========================================================================= */
+
+.intro-banner {
+  padding: 8px 0 4px;
+}
+.intro-banner h1 {
+  margin: 0 0 6px;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  color: var(--ink-strong);
+}
+.intro-banner p {
+  margin: 0;
+  color: var(--muted);
+}
+
+/* Summary metric tiles */
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.metric-grid .metric {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.metric-grid .metric span {
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+.metric-grid .metric strong {
+  font-size: 1.3rem;
+  color: var(--ink-strong);
+}
+.generated-at {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.74rem;
+  color: var(--quiet);
+}
+
+/* Secondary action button */
+.ghost-button {
+  background: transparent;
+  color: var(--green-strong);
+  border: 1px solid var(--line-strong);
+}
+.field-hint {
+  margin: 6px 0 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+/* Auth fields with visible labels */
+.auth-form .field {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.auth-form .field span {
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+/* Result card: concise summary always visible, full rationale collapsible */
+.result-summary {
+  display: grid;
+  gap: 6px;
+}
+.result-summary p {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+.result-summary b {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--ink-strong);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+.fit-details {
+  margin-top: 8px;
+}
+.fit-details > summary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--green-strong);
+  padding: 4px 0;
+}
+.fit-details[open] > summary {
+  margin-bottom: 6px;
+}
+
+/* Loading spinner for the scan state */
+.scan-spinner {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 3px solid var(--line);
+  border-top-color: var(--green);
+  animation: spin 0.8s linear infinite;
+  flex: none;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Accessibility: clear keyboard focus on all interactive elements */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Dashboard: table on desktop, cards on mobile (uses data-label from JS) */
+@media (max-width: 760px) {
+  .tracker-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .tracker-table,
+  .tracker-table tbody,
+  .tracker-table tr,
+  .tracker-table td {
+    display: block;
+    width: 100%;
+  }
+  .tracker-table tr {
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--panel);
+  }
+  .tracker-table td {
+    border: none;
+    padding: 6px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .tracker-table td::before {
+    content: attr(data-label);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .tracker-table td[data-label=""]::before {
+    content: none;
+  }
+  .tracker-table .tracker-input,
+  .tracker-table .tracker-date,
+  .tracker-table .status-select {
+    width: 100%;
+    min-height: 44px;
+  }
+}

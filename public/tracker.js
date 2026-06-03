@@ -46,26 +46,26 @@ function renderTracker() {
 
   applicationTrackerBody.innerHTML = trackedApplications.map((item) => `
     <tr>
-      <td>
+      <td data-label="Status">
         <select class="status-select" data-tracker-id="${escapeAttribute(item.id)}" data-tracker-field="status">
           ${renderStatusOptions(item.status)}
         </select>
       </td>
-      <td>
+      <td data-label="Company">
         <input class="tracker-input" data-tracker-id="${escapeAttribute(item.id)}" data-tracker-field="company" value="${escapeAttribute(item.company)}" placeholder="Company">
       </td>
-      <td>
+      <td data-label="Role">
         <input class="tracker-input" data-tracker-id="${escapeAttribute(item.id)}" data-tracker-field="role" value="${escapeAttribute(item.role)}" placeholder="Role">
         <small>${escapeHtml(item.source || "Manual")}</small>
       </td>
-      <td><span class="score-pill tracker-score">${item.matchPercent ? `${escapeHtml(item.matchPercent)}%` : "Manual"}</span></td>
-      <td>
+      <td data-label="Fit"><span class="score-pill tracker-score">${item.matchPercent ? `${escapeHtml(item.matchPercent)}%` : "Manual"}</span></td>
+      <td data-label="Last update">
         <input class="tracker-date" type="date" data-tracker-id="${escapeAttribute(item.id)}" data-tracker-field="updatedAt" value="${escapeAttribute(item.updatedAt)}">
       </td>
-      <td>
+      <td data-label="Next step">
         <input class="tracker-input wide" data-tracker-id="${escapeAttribute(item.id)}" data-tracker-field="nextStep" value="${escapeAttribute(item.nextStep)}" placeholder="Next step or note">
       </td>
-      <td>
+      <td data-label="Documents">
         <label class="document-upload">
           <span>Attach files</span>
           <input type="file" multiple data-document-id="${escapeAttribute(item.id)}" accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg">
@@ -74,13 +74,13 @@ function renderTracker() {
           ${renderDocuments(item.documents)}
         </div>
       </td>
-      <td>
+      <td data-label="Link">
         <div class="tracker-link-cell">
           <input class="tracker-input wide" data-tracker-id="${escapeAttribute(item.id)}" data-tracker-field="applyUrl" value="${escapeAttribute(item.applyUrl)}" placeholder="Application URL">
           ${isRealApplyUrl(item.applyUrl) ? `<a class="apply-link compact" href="${escapeAttribute(item.applyUrl)}" target="_blank" rel="noreferrer">Open</a>` : ""}
         </div>
       </td>
-      <td>
+      <td data-label="">
         <button class="remove-tracker-button" type="button" data-tracker-id="${escapeAttribute(item.id)}">Remove</button>
       </td>
     </tr>

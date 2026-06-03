@@ -15,6 +15,7 @@ const statusText = document.querySelector("#statusText");
 const jobsScanned = document.querySelector("#jobsScanned");
 const matchCount = document.querySelector("#matchCount");
 const termCount = document.querySelector("#termCount");
+const highestScore = document.querySelector("#highestScore");
 const generatedAt = document.querySelector("#generatedAt");
 const scanVisual = document.querySelector("#scanVisual");
 const resultsBody = document.querySelector("#resultsBody");
@@ -93,6 +94,7 @@ function resetScanResults() {
   jobsScanned.textContent = "0";
   matchCount.textContent = "0";
   termCount.textContent = "0";
+  if (highestScore) highestScore.textContent = "—";
   generatedAt.textContent = "";
   profileSummary.textContent = "Building profile from the uploaded CV...";
   profileFacts.innerHTML = "";
@@ -107,6 +109,10 @@ function renderMatches(analysis) {
   jobsScanned.textContent = analysis.jobsScanned ?? 0;
   matchCount.textContent = latestMatches.length;
   termCount.textContent = analysis.resumeTerms?.length ?? 0;
+  if (highestScore) {
+    const highest = analysis.diagnostics?.highestScore ?? 0;
+    highestScore.textContent = highest ? `${highest}%` : "—";
+  }
   generatedAt.textContent = analysis.generatedAt ? formatDate(analysis.generatedAt) : "";
   renderProfile(analysis.resumeProfile);
   renderSourceLinks(analysis.sourceLinks ?? []);
@@ -129,8 +135,8 @@ function renderMatches(analysis) {
       </td>
       <td class="result-location-cell" data-label="Location">${escapeHtml(match.location || "Location not listed")}</td>
       <td class="notes result-rationale-cell" data-label="Fit rationale">
-        ${renderMobileFitSummary(match)}
-        <div class="desktop-fit-details">${renderMatchRationale(match)}</div>
+        ${renderResultSummary(match)}
+        <details class="fit-details"><summary>More details</summary>${renderMatchRationale(match)}</details>
       </td>
       <td class="result-actions-cell" data-label="Actions">${renderApplyAction(match, index)}</td>
     </tr>
@@ -191,8 +197,8 @@ function nearMatchRow(match, index) {
       <td class="result-location-cell" data-label="Location">${escapeHtml(match.location || "Location not listed")}</td>
       <td class="notes result-rationale-cell" data-label="Fit rationale">
         <p class="near-reason" dir="rtl"><b>למה לא עבר את הסף</b>${escapeHtml(match.reason || "")}</p>
-        ${renderMobileFitSummary(match)}
-        <div class="desktop-fit-details">${renderMatchRationale(match)}</div>
+        ${renderResultSummary(match)}
+        <details class="fit-details"><summary>More details</summary>${renderMatchRationale(match)}</details>
       </td>
       <td class="result-actions-cell" data-label="Actions">${renderApplyAction(match, index, true)}</td>
     </tr>
@@ -233,10 +239,10 @@ function renderQualityNote(match) {
   `;
 }
 
-function renderMobileFitSummary(match) {
+function renderResultSummary(match) {
   const fit = match.fitAnalysis || {};
   return `
-    <div class="mobile-fit-summary" dir="rtl">
+    <div class="result-summary" dir="rtl">
       <p><b>רמת התאמה</b>${escapeHtml(FIT_LABEL_HE[fit.fitLabel] || fit.fitLabel || "")}</p>
       <p><b>למה מתאים</b>${escapeHtml(match.mainFit || fit.whyFits || "לא זוהו סימני התאמה")}</p>
       <p><b>מה חסר</b>${escapeHtml(match.mainGap || fit.whatsMissing || "לא זוהה פער")}</p>
