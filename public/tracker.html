@@ -11,15 +11,11 @@
       <header class="topbar">
         <a class="brand-mark" href="/" aria-label="Job Agent home">
           <span class="brand-glyph">JA</span>
-          <span>
-            <strong>Job Agent</strong>
-            <small>Application control room</small>
-          </span>
+          <strong>Job Agent</strong>
         </a>
-        <div class="topbar-meta">
-          <span>Workspace</span>
-          <a href="/">Scanner</a>
-          <a href="/tracker.html">Applications</a>
+        <nav class="topbar-meta" aria-label="Main">
+          <a href="/">Scan</a>
+          <a href="/tracker.html" aria-current="page">Applications</a>
           <button id="logoutButton" class="topbar-button" type="button" hidden>Logout</button>
         </div>
       </header>
@@ -51,8 +47,6 @@
           </p>
         </div>
         <div class="locked-actions">
-          <a class="primary-link" href="#authPanel">Create account</a>
-          <a class="secondary-link" href="#authPanel">Login</a>
           <a class="secondary-link" href="/">Back to scan</a>
         </div>
       </section>

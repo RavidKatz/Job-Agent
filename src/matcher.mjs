@@ -1127,7 +1127,7 @@ function scoreToolsMatch({ requirementText, body, resumeProfile, config }) {
 
 // Component 6 (5): years of experience and seniority fit.
 function scoreExperienceSeniority({ experienceFit, jobSeniority, resumeProfile }) {
-  let score = 0.6;
+  let score = 0.65;
   if (experienceFit.requiredYears != null && experienceFit.resumeYears != null) {
     const gap = experienceFit.gap;
     if (gap <= 0) score = 1;
@@ -1135,19 +1135,62 @@ function scoreExperienceSeniority({ experienceFit, jobSeniority, resumeProfile }
     else if (gap === 2) score = 0.45;
     else score = 0.2;
   } else if (experienceFit.requiredYears != null && experienceFit.resumeYears == null) {
-    score = experienceFit.requiredYears >= 5 ? 0.3 : 0.5;
+    score = experienceFit.requiredYears >= 5 ? 0.45 : 0.6;
   }
-  if (jobSeniority === "senior" && (resumeProfile.yearsExperience == null || resumeProfile.yearsExperience < 5)) {
+  if (jobSeniority === "senior" && resumeProfile.yearsExperience != null && resumeProfile.yearsExperience < 5) {
     score = Math.min(score, 0.3);
   }
   return clamp01(score);
+}
+
+function buildConfidenceAssessment({ job, components, requirementFit, experienceFit, jobSeniority, missingDataWarnings }) {
+  const quality = job.quality ?? {};
+  let score = Number.isFinite(quality.dataQualityScore) ? quality.dataQualityScore : 82;
+  const reasons = [];
+
+  if (quality.sourceReliability === "low") {
+    score -= 12;
+    reasons.push("Weak source reliability");
+  } else if (quality.sourceReliability === "medium") {
+    score -= 5;
+  }
+
+  if (quality.isSearchShortcut) {
+    score -= 18;
+    reasons.push("Source link is a search page, not a specific job");
+  }
+
+  if (missingDataWarnings.length) {
+    score -= Math.min(30, missingDataWarnings.length * 6);
+    reasons.push(...missingDataWarnings.slice(0, 4));
+  }
+
+  if (!requirementFit.requiredRequirementTerms.length) score -= 10;
+  if (experienceFit.requiredYears == null) {
+    score -= 6;
+  } else if (experienceFit.resumeYears == null) {
+    score -= experienceFit.requiredYears >= 5 ? 14 : 8;
+    reasons.push("Resume years are not confirmed");
+  }
+  if (jobSeniority === "unspecified") score -= 5;
+
+  if (components.recent.score >= 0.5 && components.mustHave.score >= 0.6 && components.essence.score >= 0.5) {
+    score += 8;
+  }
+
+  const confidenceScore = Math.max(0, Math.min(100, Math.round(score)));
+  return {
+    confidence: confidenceScore >= 75 ? "high" : confidenceScore >= 50 ? "medium" : "low",
+    confidenceScore,
+    confidenceReasons: uniqueSorted(reasons).slice(0, 6)
+  };
 }
 
 // Builds the explainable output: a Hebrew explanation plus the English keys the
 // UI and CSV export already consume.
 function buildFitExplanation({
   job, matchPercent, components, jobDirection, requirementFit, experienceFit,
-  resumeProfile, warnings, missingDataWarnings
+  resumeProfile, warnings, missingDataWarnings, confidenceAssessment
 }) {
   const { recent, essence, mustHave, education, tools } = components;
   const directionHe = DIRECTION_HE[jobDirection] ?? jobDirection;
@@ -1196,15 +1239,13 @@ function buildFitExplanation({
     ? `מקד את קורות החיים סביב ${heList(whySignals)}, והדגש את ההתאמה לכיוון ${directionHe}.`
     : `הדגש ניסיון רלוונטי בפרויקטים, תפעול, דאטה ו-AI שמתאים לכיוון ${directionHe}.`;
 
-  const confidence = missingDataWarnings.length >= 3
-    ? "low"
-    : (recent.score >= 0.5 && mustHave.score >= 0.6) ? "high" : "medium";
-
   return {
     // English keys kept for the existing UI table and CSV export
     fitScore: matchPercent,
     recommendation: finalRecommendation,
-    confidence,
+    confidence: confidenceAssessment.confidence,
+    confidenceScore: confidenceAssessment.confidenceScore,
+    confidenceReasons: confidenceAssessment.confidenceReasons,
     requirementCoverage: requirementFit.requiredRequirementTerms.length
       ? `${requirementFit.requiredSupportedTerms.length}/${requirementFit.requiredRequirementTerms.length} required, ${Math.round(requirementFit.exactCoverage * 100)}% exact`
       : "Not detected",
@@ -1325,7 +1366,6 @@ export function scoreJob(job, resumeProfile, config) {
     warnings.push(`מסננים שליליים: ${avoidMatches.join(", ")}`);
   }
   if (!job.applyUrl) {
-    score -= 3;
     warnings.push("אין קישור הגשה ישיר");
   }
   if (isOutOfMarket(job.location, job.workMode, config)) {
@@ -1341,11 +1381,19 @@ export function scoreJob(job, resumeProfile, config) {
     jobSeniority
   });
   if (missingDataWarnings.length >= 4) {
-    score = capScore(score, 72, warnings, "נתוני משרה חסרים מגבילים את ודאות הציון");
+    warnings.push("נתוני משרה חסרים מורידים את ודאות הציון");
   }
 
   const matchPercent = Math.max(0, Math.min(100, Math.round(score)));
   const components = { recent, essence, mustHave, education, tools, experience };
+  const confidenceAssessment = buildConfidenceAssessment({
+    job,
+    components,
+    requirementFit,
+    experienceFit,
+    jobSeniority,
+    missingDataWarnings
+  });
   const fitAnalysis = buildFitExplanation({
     job,
     matchPercent,
@@ -1355,7 +1403,8 @@ export function scoreJob(job, resumeProfile, config) {
     experienceFit,
     resumeProfile,
     warnings,
-    missingDataWarnings
+    missingDataWarnings,
+    confidenceAssessment
   });
 
   let category = classifyJobCategory(title, body, requirementFit, essence.substance);
@@ -1372,6 +1421,7 @@ export function scoreJob(job, resumeProfile, config) {
     position: job.title ?? "",
     category,
     matchPercent,
+    confidenceScore: fitAnalysis.confidenceScore,
     priority: priorityFromPercent(matchPercent),
     status: "Found",
     appliedVia: job.source ?? "",
@@ -1409,6 +1459,8 @@ export function scoreJob(job, resumeProfile, config) {
         ? Math.round(requirementFit.exactCoverage * 100)
         : null,
       confidence: fitAnalysis.confidence,
+      confidenceScore: fitAnalysis.confidenceScore,
+      confidenceReasons: fitAnalysis.confidenceReasons,
       requiredYears: experienceFit.requiredYears,
       resumeYears: experienceFit.resumeYears,
       experienceGap: experienceFit.gap,

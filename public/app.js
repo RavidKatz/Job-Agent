@@ -243,6 +243,7 @@ function renderResultSummary(match) {
   const fit = match.fitAnalysis || {};
   return `
     <div class="result-summary" dir="rtl">
+      <p><b>Confidence</b>${escapeHtml(String(fit.confidenceScore ?? match.confidenceScore ?? "N/A"))}/100</p>
       <p><b>רמת התאמה</b>${escapeHtml(FIT_LABEL_HE[fit.fitLabel] || fit.fitLabel || "")}</p>
       <p><b>למה מתאים</b>${escapeHtml(match.mainFit || fit.whyFits || "לא זוהו סימני התאמה")}</p>
       <p><b>מה חסר</b>${escapeHtml(match.mainGap || fit.whatsMissing || "לא זוהה פער")}</p>
@@ -257,6 +258,7 @@ function renderMatchRationale(match) {
     return `
       <div class="fit-analysis" dir="rtl">
         <div class="fit-meta">
+          <span>${escapeHtml(String(fit.confidenceScore ?? match.confidenceScore ?? "N/A"))}/100 confidence</span>
           <span>${escapeHtml(FIT_LABEL_HE[fit.fitLabel] || fit.fitLabel || "")}</span>
           <span>${escapeHtml(match.category || "ללא קטגוריה")}</span>
           <span>${escapeHtml(fit.requirementCoverage || "כיסוי לא זוהה")}</span>
@@ -286,7 +288,7 @@ function renderMatchRationale(match) {
 
 function renderProfile(profile) {
   if (!profile) {
-    profileSummary.textContent = "The resume profile will appear after the scan.";
+    profileSummary.textContent = "Your profile appears after a scan.";
     roleRecommendations.innerHTML = "";
     return;
   }
@@ -537,7 +539,7 @@ minimumScore.addEventListener("input", () => {
 
 thresholdSearchButton?.addEventListener("click", () => {
   if (!resumeFile.files[0]) {
-    setStatus("Upload a resume before searching with the selected threshold.", true);
+    setStatus("Upload a CV before searching.", true);
     form.scrollIntoView({ behavior: "smooth", block: "center" });
     return;
   }
@@ -616,6 +618,6 @@ auth = await setupAuth({
       return;
     }
     scanButton.disabled = false;
-    setStatus("Upload a resume to scan. Create an account later to save your dashboard.");
+    setStatus("Upload a CV to scan. Create an account to save your dashboard.");
   }
 });

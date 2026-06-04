@@ -71,10 +71,30 @@ const lowDevJob = {
 const strong = scoreJob(strongPmoAiJob, profile, config);
 const medium = scoreJob(mediumDataPmJob, profile, config);
 const low = scoreJob(lowDevJob, profile, config);
+const shortButRelevantJob = {
+  company: "LeanOps",
+  title: "AI Solutions Project Manager",
+  location: "Tel Aviv",
+  workMode: "Hybrid",
+  source: "Test",
+  applyUrl: "https://example.com/short",
+  postedAt: "2026-05-24",
+  quality: {
+    dataQualityScore: 45,
+    sourceReliability: "low",
+    missingFields: [],
+    qualityWarnings: ["short description"],
+    isSearchShortcut: false,
+    isRealJob: true
+  },
+  description: "Manage AI workflow projects, requirements, stakeholders, Jira and KPI dashboards."
+};
+const shortRelevant = scoreJob(shortButRelevantJob, profile, config);
 
 console.log("Strong PMO/AI job:", strong.matchPercent, strong.fitAnalysis.fitLabel, strong.fitAnalysis.finalRecommendation);
 console.log("Medium data PM job:", medium.matchPercent, medium.fitAnalysis.fitLabel, medium.fitAnalysis.finalRecommendation);
 console.log("Low dev/ML job:", low.matchPercent, low.fitAnalysis.fitLabel, low.fitAnalysis.finalRecommendation);
+console.log("Short relevant job:", shortRelevant.matchPercent, "confidence", shortRelevant.fitAnalysis.confidenceScore);
 
 // --- Assertions ------------------------------------------------------------
 // 1. Strong-fit PMO / AI implementation job scores highest and is recommended.
@@ -92,6 +112,11 @@ assert.ok(low.matchPercent < medium.matchPercent, "dev job should rank below dat
 
 // 4. The engine does not over-rate keyword-only overlap.
 assert.ok(strong.matchPercent > low.matchPercent, "real fit should beat keyword-only fit");
+
+// 4b. Low data quality should lower confidence, not automatically crush fit.
+assert.ok(shortRelevant.matchPercent >= 60, `short relevant job should remain viable, got ${shortRelevant.matchPercent}`);
+assert.ok(shortRelevant.fitAnalysis.confidenceScore < shortRelevant.matchPercent, "short job should have lower confidence than fit");
+assert.notEqual(shortRelevant.fitAnalysis.finalRecommendation, "Not recommended");
 
 // 5. Ranking returns the strong job first.
 const ranked = rankJobs([lowDevJob, mediumDataPmJob, strongPmoAiJob], profile, config);
