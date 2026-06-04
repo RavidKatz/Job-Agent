@@ -355,17 +355,17 @@
     },
     "data science": {
       "field": "Data Science",
-      "directions": ["data-bi", "operations", "ai-ops"],
+      "directions": ["data-bi"],
       "supportsEngineering": false
     },
     "information systems": {
       "field": "Information Systems",
-      "directions": ["implementation", "data-bi", "pmo", "ai-ops"],
+      "directions": ["implementation", "data-bi"],
       "supportsEngineering": false
     },
     "computer science": {
       "field": "Computer Science",
-      "directions": ["engineering", "data-bi", "ai-ops"],
+      "directions": ["engineering"],
       "supportsEngineering": true
     },
     "software engineering": {
@@ -385,7 +385,7 @@
     },
     "economics": {
       "field": "Economics",
-      "directions": ["finance", "data-bi", "operations"],
+      "directions": ["finance"],
       "supportsEngineering": false
     }
   },

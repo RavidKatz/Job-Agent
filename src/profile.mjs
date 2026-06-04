@@ -31,6 +31,9 @@ export function buildResumeProfile(resumeText, config) {
   const latestContext = extractLatestResumeContext(resumeText, config);
   const roleRecommendations = recommendRoles(resumeText, config, latestContext);
   const dynamicSearchTerms = buildDynamicSearchTerms(roleRecommendations, config, latestContext);
+  const searchTermWarning = dynamicSearchTerms.length
+    ? null
+    : "We could not confidently detect your target roles. Please add a target role or improve your CV text.";
   const education = extractEducationProfile(resumeText, config);
   const lastRole = extractLastRoleProfile(resumeText, config);
   const directionSignals = buildDirectionSignals(roleRecommendations);
@@ -48,6 +51,8 @@ export function buildResumeProfile(resumeText, config) {
     directionSignals,
     roleRecommendations,
     dynamicSearchTerms,
+    searchTermWarning,
+    targetRoleInput: config.targetRoleInput ?? null,
     tokenCount: tokens.size
   };
 }
@@ -62,6 +67,8 @@ export function toPublicResumeProfile(resumeProfile) {
     education: resumeProfile.education,
     lastRole: resumeProfile.lastRole,
     roleRecommendations: resumeProfile.roleRecommendations,
-    searchTerms: resumeProfile.dynamicSearchTerms
+    searchTerms: resumeProfile.dynamicSearchTerms,
+    searchTermWarning: resumeProfile.searchTermWarning,
+    targetRoleInput: resumeProfile.targetRoleInput
   };
 }

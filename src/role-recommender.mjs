@@ -378,6 +378,29 @@ const ROLE_FAMILIES = [
   }
 ];
 
+const BROAD_DIRECTION_SIGNALS = new Set([
+  "api",
+  "business",
+  "client communication",
+  "crm",
+  "customer",
+  "dashboard",
+  "data",
+  "data analysis",
+  "excel",
+  "management",
+  "operations",
+  "process",
+  "product",
+  "project",
+  "reporting",
+  "reports",
+  "sql",
+  "stakeholder",
+  "stakeholder management",
+  "workflow"
+].map(normalizeText));
+
 const EXPERIENCE_PATTERNS = [
   /(\d{1,2})\+?\s*(?:years|year|שנים|שנה)/giu,
   /(?:experience|ניסיון)\s*(?:of|של)?\s*(\d{1,2})/giu
@@ -542,6 +565,18 @@ function cleanResumeLine(line) {
     .trim();
 }
 
+function cleanRoleTitle(title) {
+  const cleaned = cleanResumeLine(title);
+  if (!cleaned) return null;
+
+  const [beforeComma] = cleaned.split(/\s*,\s*/u);
+  if (beforeComma && beforeComma.length >= 3 && beforeComma.split(/\s+/u).length <= 8) {
+    return beforeComma.trim();
+  }
+
+  return cleaned;
+}
+
 function looksLikeRoleLine(line) {
   const normalized = normalizeText(line);
   if (!normalized || normalized.length < 3 || normalized.length > 90) return false;
@@ -564,11 +599,13 @@ function extractTitleFromEmploymentEntry(entry) {
   const roleLine = lines.find((line) => {
     return looksLikeRoleLine(line) && line.split(/\s+/u).length <= 8;
   }) ?? lines.find(looksLikeRoleLine);
-  if (roleLine) return roleLine;
+  if (roleLine) return cleanRoleTitle(roleLine);
 
-  return lines.find((line) => {
+  const fallbackLine = lines.find((line) => {
     return line.length >= 3 && line.length <= 80 && !/^\d+$/.test(line);
   }) ?? null;
+
+  return cleanRoleTitle(fallbackLine);
 }
 
 function getLatestEmploymentEntry(text) {
@@ -635,6 +672,15 @@ function matchedFamiliesFromText(text, config) {
     .filter((result) => result.hits.length);
 }
 
+function bestFamilyFromText(text, config) {
+  const matches = matchedFamiliesFromText(text, config);
+  if (!matches.length) return null;
+
+  return matches
+    .slice()
+    .sort((a, b) => b.hits.length - a.hits.length)[0].family;
+}
+
 function inferEducationSearchTerms(educationText) {
   const normalized = normalizeText(educationText);
   const terms = [];
@@ -651,8 +697,8 @@ function inferEducationSearchTerms(educationText) {
   if (includesPhrase(normalized, "accounting") || includesPhrase(normalized, "finance") || includesPhrase(normalized, "חשבונאות") || includesPhrase(normalized, "כלכלה")) {
     terms.push("Bookkeeper", "Accountant", "Finance Analyst");
   }
-  if (includesPhrase(normalized, "business administration") || includesPhrase(normalized, "management") || includesPhrase(normalized, "מנהל עסקים") || includesPhrase(normalized, "ניהול")) {
-    terms.push("Operations Coordinator", "Business Operations Analyst");
+  if (includesPhrase(normalized, "human resources") || includesPhrase(normalized, "recruiting") || includesPhrase(normalized, "talent acquisition")) {
+    terms.push("Recruiter", "HR Coordinator", "Talent Acquisition Coordinator");
   }
 
   return uniqueSorted(terms);
@@ -840,6 +886,10 @@ function signalMatchesResume(normalizedResume, signal, config) {
   return [signal, ...aliases].some((candidate) => includesPhrase(normalizedResume, candidate));
 }
 
+function isStrongRoleSignal(signal) {
+  return !BROAD_DIRECTION_SIGNALS.has(normalizeText(signal));
+}
+
 export function recommendRoles(resumeText, config, latestContext = null) {
   const normalized = normalizeText(resumeText);
   const latestText = normalizeText([
@@ -853,12 +903,19 @@ export function recommendRoles(resumeText, config, latestContext = null) {
       const matchedSignals = family.signals.filter((signal) => signalMatchesResume(normalized, signal, config));
       const latestSignals = family.signals.filter((signal) => signalMatchesResume(latestText, signal, config));
       const latestSearchHits = family.searchTerms.filter((term) => includesPhrase(latestText, term));
+      const strongMatchedSignals = matchedSignals.filter(isStrongRoleSignal);
+      const strongLatestSignals = latestSignals.filter(isStrongRoleSignal);
       const configuredHits = (config.coreSkills ?? []).filter((skill) => {
         return family.signals.some((signal) => normalizeText(signal) === normalizeText(skill))
           && signalMatchesResume(normalized, skill, config);
       });
-      const latestContextBonus = (latestSignals.length * 20) + (latestSearchHits.length * 20);
-      const score = Math.min(100, Math.round((matchedSignals.length * 15) + (configuredHits.length * 5) + latestContextBonus));
+      const hasStrongEvidence = latestSearchHits.length > 0
+        || strongLatestSignals.length > 0
+        || strongMatchedSignals.length >= 2;
+      const latestContextBonus = (strongLatestSignals.length * 24) + (latestSearchHits.length * 25);
+      const score = hasStrongEvidence
+        ? Math.min(100, Math.round((strongMatchedSignals.length * 18) + (configuredHits.length * 4) + latestContextBonus))
+        : 0;
 
       return {
         id: family.id,
@@ -869,7 +926,7 @@ export function recommendRoles(resumeText, config, latestContext = null) {
         reasons: family.reasons
       };
     })
-    .filter((role) => role.score >= 20)
+    .filter((role) => role.score >= 60)
     .sort((a, b) => b.score - a.score)
     .slice(0, 5);
 }
@@ -930,7 +987,21 @@ export function buildDynamicSearchTerms(recommendations, config, latestContext =
   ].filter((term) => String(term ?? "").trim().length >= 3);
   const orderedTerms = [];
 
-  for (const term of [...latestTerms, ...priorityTerms, ...remainingRoleTerms]) {
+  const latestRoleFamily = bestFamilyFromText([
+    latestContext?.latestRole,
+    latestContext?.latestRoleText
+  ].filter(Boolean).join(" "), config);
+  const latestRoleFallbackTerms = latestContext?.latestRole
+    ? [
+      latestContext.latestRole,
+      ...(latestRoleFamily?.searchTerms ?? [])
+    ]
+    : [];
+  const educationFallbackTerms = latestContext?.latestEducation
+    ? latestContext.educationSearchTerms ?? []
+    : [];
+
+  for (const term of [...latestTerms, ...priorityTerms, ...remainingRoleTerms, ...latestRoleFallbackTerms, ...educationFallbackTerms]) {
     const normalized = normalizeText(term);
     if (!normalized || orderedTerms.some((existing) => normalizeText(existing) === normalized)) {
       continue;

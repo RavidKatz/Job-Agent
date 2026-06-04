@@ -18,7 +18,7 @@ export async function loadJobsFromSources({ rootDir, sourcesPath, searchTerms = 
   const config = await readJson(resolveLocal(sourcesPath, rootDir));
   const selectedSourceIds = new Set((sourceIds ?? []).filter(Boolean));
   const sources = (config.sources ?? []).map((source) => {
-    if (!searchTerms.length || source.useProfileSearchTerms === false) {
+    if (source.useProfileSearchTerms === false) {
       return source;
     }
 
@@ -36,6 +36,10 @@ export async function loadJobsFromSources({ rootDir, sourcesPath, searchTerms = 
   const jobs = [];
   const notices = [];
   const sourceLinks = [];
+
+  if (!searchTerms.length) {
+    notices.push("We could not confidently detect your target roles. Please add a target role or improve your CV text.");
+  }
 
   for (const source of enabledSources) {
     try {
