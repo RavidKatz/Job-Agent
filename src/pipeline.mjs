@@ -3,6 +3,96 @@ import { loadJobsFromSources, resolveLocal } from "./connectors/index.mjs";
 import { readJson, readText, writeCsv, writeJson } from "./io.mjs";
 import { rankJobs } from "./matcher.mjs";
 import { buildResumeProfile, toPublicResumeProfile } from "./profile.mjs";
+import { inferJobFamily } from "./role-recommender.mjs";
+import { normalizeText, tokenize } from "./text.mjs";
+
+// ---------------------------------------------------------------------------
+// Soft relevance gate (Phase 5A)
+//
+// After scoring, this gate prevents obviously off-target jobs from appearing
+// in nearMatches. It does NOT touch jobs that already passed the threshold.
+// If there is no signal to gate on (no target role, no search terms, no profile
+// direction), everything passes — the gate only activates when there is a clear
+// candidate direction to compare against.
+// ---------------------------------------------------------------------------
+
+// Maps role-family IDs (from inferJobFamily) to direction IDs.
+// Kept local to pipeline.mjs to avoid coupling; mirrors FAMILY_TO_DIRECTION in job-fit.mjs.
+const FAMILY_DIRECTION_MAP = {
+  "ai-solutions":           "ai-ops",
+  "project-coordination":   "pmo",
+  "data-business-analysis": "data-bi",
+  "implementation-erp":     "implementation",
+  "digital-projects":       "product-ops",
+  "operations":             "operations",
+  "product-operations":     "product-ops",
+  "software-development":   "engineering",
+  "finance-accounting":     "finance",
+  "hr-recruiting":          "hr-recruiting",
+  "sales-customer-service": "sales",
+  "marketing-content":      "marketing",
+  "logistics-supply-chain": "logistics",
+  "administration-office":  "admin"
+};
+
+// Tokens that are too generic to serve as relevance signals on their own
+// (e.g. "manager" matches both "Marketing Manager" and "Project Manager").
+const BROAD_GATE_TOKENS = new Set([
+  "manager", "coordinator", "specialist", "analyst", "officer", "director",
+  "lead", "head", "senior", "junior", "associate", "assistant", "intern",
+  "staff", "team", "role", "professional", "expert"
+]);
+
+// Build the gate state: candidate direction set + key token set.
+export function buildGateState(resumeProfile) {
+  // 1. Build the candidate's allowed directions.
+  const candidateDirections = new Set(resumeProfile.education?.directions ?? []);
+  for (const rec of (resumeProfile.roleRecommendations ?? []).slice(0, 5)) {
+    const dir = FAMILY_DIRECTION_MAP[rec.id];
+    if (dir) candidateDirections.add(dir);
+  }
+  // If a target role is given, also infer its direction.
+  if (resumeProfile.targetRoleInput) {
+    const fam = inferJobFamily(resumeProfile.targetRoleInput);
+    const dir = FAMILY_DIRECTION_MAP[fam ?? ""];
+    if (dir) candidateDirections.add(dir);
+  }
+
+  // 2. Build the key token set from targetRoleInput + top search terms.
+  const sourceTerms = [
+    resumeProfile.targetRoleInput,
+    ...(resumeProfile.dynamicSearchTerms ?? []).slice(0, 8)
+  ].filter(Boolean);
+
+  const tokenSet = new Set(
+    sourceTerms
+      .flatMap((term) => tokenize(normalizeText(term)))
+      .filter((t) => t.length > 3 && !BROAD_GATE_TOKENS.has(t))
+  );
+
+  return { candidateDirections, tokenSet };
+}
+
+// Returns true if the scored job is plausibly on-target for this candidate.
+// Uses already-computed matcher fields — no additional API or scoring calls.
+export function isJobOnTarget(scoredJob, gateState) {
+  const { candidateDirections, tokenSet } = gateState;
+
+  // No signal → gate is inactive, let everything through.
+  if (candidateDirections.size === 0 && tokenSet.size === 0) return true;
+
+  // 1. Direction match: use the direction the matcher already computed.
+  const jobDir = scoredJob.matchBreakdown?.jobDirection;
+  if (jobDir && jobDir !== "general" && candidateDirections.has(jobDir)) return true;
+
+  // 2. Title token overlap with the candidate's key terms.
+  if (tokenSet.size > 0) {
+    const titleTokens = tokenize(normalizeText(scoredJob.position ?? ""));
+    if (titleTokens.some((t) => tokenSet.has(t))) return true;
+  }
+
+  return false;
+}
 
 export async function loadConfig(rootDir, configPath) {
   return readJson(resolveLocal(configPath, rootDir));
@@ -66,7 +156,7 @@ function collectSourceWarnings(jobs, sourceNotices) {
   return [...warnings].slice(0, 8);
 }
 
-function buildDiagnostics({ ranked, jobsScanned, threshold, resumeProfile, jobsWithQuality, sourceNotices, belowThreshold }) {
+function buildDiagnostics({ ranked, jobsScanned, threshold, resumeProfile, jobsWithQuality, sourceNotices, belowThreshold, offTargetHidden = 0 }) {
   const scores = ranked.map((job) => job.matchPercent);
   const highestScore = scores.length ? Math.max(...scores) : 0;
   const averageScore = scores.length
@@ -88,7 +178,8 @@ function buildDiagnostics({ ranked, jobsScanned, threshold, resumeProfile, jobsW
     },
     searchTerms: resumeProfile.dynamicSearchTerms ?? [],
     sourceWarnings: collectSourceWarnings(jobsWithQuality, sourceNotices),
-    topFailureReasons: aggregateFailureReasons(belowThreshold)
+    topFailureReasons: aggregateFailureReasons(belowThreshold),
+    offTargetHidden
   };
 }
 
@@ -111,12 +202,18 @@ export function analyzeJobsWithProfile({ resumeProfile, jobs, config, sourceNoti
   const matches = ranked.filter((job) => job.matchPercent >= threshold);
   const belowThreshold = ranked.filter((job) => job.matchPercent < threshold);
 
-  // When nothing passes, surface the closest jobs below the threshold so the
-  // user gets an honest result instead of an empty dead end. Kept separate from
-  // real matches and never counted as passing.
+  // Apply the soft relevance gate to jobs below the threshold.
+  // Jobs that already passed the threshold are never touched.
+  const gateState = buildGateState(resumeProfile);
+  const relevantBelowThreshold = belowThreshold.filter((job) => isJobOnTarget(job, gateState));
+  const offTargetHidden = belowThreshold.length - relevantBelowThreshold.length;
+
+  // When nothing passes, surface the closest relevant jobs below the threshold
+  // so the user gets an honest result instead of an empty dead end. Kept
+  // separate from real matches and never counted as passing.
   const nearMatches = matches.length
     ? []
-    : belowThreshold
+    : relevantBelowThreshold
         .filter((job) => job.quality?.isRealJob !== false)
         .slice(0, NEAR_MATCH_LIMIT)
         .map((job) => ({
@@ -131,7 +228,8 @@ export function analyzeJobsWithProfile({ resumeProfile, jobs, config, sourceNoti
     resumeProfile,
     jobsWithQuality,
     sourceNotices,
-    belowThreshold
+    belowThreshold,
+    offTargetHidden
   });
 
   return {
