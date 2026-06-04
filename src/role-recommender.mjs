@@ -973,6 +973,51 @@ export function inferJobFamily(text) {
   return bestScore >= 2 ? bestId : null;
 }
 
+// Expands a free-text target role into a small set of generic search terms by
+// matching it against the ROLE_FAMILIES taxonomy and adding the exact input.
+// This is intentionally generic — the same function works for any profession.
+export function expandTargetRoleTerms(targetRoleInput) {
+  if (!targetRoleInput || !String(targetRoleInput).trim()) return [];
+  const input = String(targetRoleInput).trim();
+  const normalizedInput = normalizeText(input);
+
+  // Always include the exact input first (highest priority).
+  const terms = [input];
+
+  // Find the role family that best matches the target role text.
+  let bestFamily = null;
+  let bestScore = 0;
+  for (const family of ROLE_FAMILIES) {
+    const score = [...family.signals, ...family.searchTerms]
+      .filter((term) => includesPhrase(normalizedInput, term) || includesPhrase(normalizeText(term), normalizedInput))
+      .length;
+    if (score > bestScore) {
+      bestScore = score;
+      bestFamily = family;
+    }
+  }
+
+  // If a family matched, add its search terms (skip ones already present).
+  if (bestFamily && bestScore >= 1) {
+    for (const term of bestFamily.searchTerms) {
+      const normalized = normalizeText(term);
+      if (normalized && !terms.some((t) => normalizeText(t) === normalized)) {
+        terms.push(term);
+      }
+      if (terms.length >= 6) break;
+    }
+  }
+
+  // Preserve insertion order (exact input first); no alpha sort.
+  const seen = new Set();
+  return terms.filter((t) => {
+    const k = normalizeText(t);
+    if (!k || seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  }).slice(0, 8);
+}
+
 export function buildDynamicSearchTerms(recommendations, config, latestContext = null) {
   const topScore = recommendations[0]?.score ?? 0;
   const selectedRecommendations = recommendations.filter((role) => {
@@ -1001,7 +1046,12 @@ export function buildDynamicSearchTerms(recommendations, config, latestContext =
     ? latestContext.educationSearchTerms ?? []
     : [];
 
-  for (const term of [...latestTerms, ...priorityTerms, ...remainingRoleTerms, ...latestRoleFallbackTerms, ...educationFallbackTerms]) {
+  // targetRoleInput gets the highest priority — placed before all other terms.
+  const targetTerms = config.targetRoleInput
+    ? expandTargetRoleTerms(config.targetRoleInput)
+    : [];
+
+  for (const term of [...targetTerms, ...latestTerms, ...priorityTerms, ...remainingRoleTerms, ...latestRoleFallbackTerms, ...educationFallbackTerms]) {
     const normalized = normalizeText(term);
     if (!normalized || orderedTerms.some((existing) => normalizeText(existing) === normalized)) {
       continue;

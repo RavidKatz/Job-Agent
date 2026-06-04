@@ -578,6 +578,10 @@ form.addEventListener("submit", async (event) => {
     formData.append("resume", resumeFile.files[0]);
     formData.append("minimumScore", minimumScore.value);
     formData.append("sourceIds", JSON.stringify(selectedSourceIds));
+    const targetRoleValue = document.querySelector("#targetRoleInput")?.value?.trim();
+    if (targetRoleValue) {
+      formData.append("targetRoleInput", targetRoleValue);
+    }
     if (jobsFile.files[0]) {
       formData.append("jobsFile", jobsFile.files[0]);
     }

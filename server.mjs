@@ -120,6 +120,10 @@ async function handleMatch(request, response) {
   if (Number.isFinite(requestedMinimumScore)) {
     config.minimumScore = Math.max(0, Math.min(100, requestedMinimumScore));
   }
+  const targetRoleInput = String(fields.targetRoleInput ?? "").trim();
+  if (targetRoleInput) {
+    config.targetRoleInput = targetRoleInput;
+  }
 
   const resumeText = await extractResumeText(files.resume);
   if (resumeText.trim().length < 80) {

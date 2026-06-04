@@ -733,6 +733,34 @@ h2 {
   animation-delay: 220ms;
 }
 
+.target-role-field {
+  display: grid;
+  gap: 6px;
+}
+.target-role-label {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--ink-strong);
+}
+.target-role-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  font-size: 0.94rem;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.target-role-input:focus {
+  border-color: var(--green);
+}
+.target-role-input::placeholder {
+  color: var(--quiet);
+  font-size: 0.86rem;
+}
+
 .score-control {
   display: grid;
   gap: 12px;
