@@ -32,13 +32,24 @@ export function buildResumeProfile(resumeText, config) {
   const latestContext = extractLatestResumeContext(resumeText, config);
   let roleRecommendations = recommendRoles(resumeText, config, latestContext);
 
-  // Fallback: when the CV produces no strong recommendation, seed the candidate
-  // direction from the explicitly typed target role. This keeps "best direction",
-  // role recommendations, direction signals, and the per-job evidence chain
-  // populated for sparse or non-English CVs. Strong CVs are left untouched.
-  if (!roleRecommendations.length && config.targetRoleInput) {
-    const fallback = recommendRoleFromTargetInput(config.targetRoleInput);
-    if (fallback) roleRecommendations = [fallback];
+  // When the user explicitly provides a target role, always ensure its family
+  // appears in roleRecommendations so the profile display, direction signals,
+  // and scoring all reflect the user's stated intent.
+  //
+  // Ordering rule: prefer the target role as the top recommendation unless
+  // the CV already has clearly strong evidence (score >= 75) for a different
+  // direction. In that case, the CV-backed direction leads and the target role
+  // is appended as a secondary option.
+  //
+  // If the CV already detected the same family, do not add a duplicate.
+  if (config.targetRoleInput) {
+    const targetRec = recommendRoleFromTargetInput(config.targetRoleInput);
+    if (targetRec && !roleRecommendations.some((r) => r.id === targetRec.id)) {
+      const hasStrongCvRec = roleRecommendations.some((r) => r.score >= 75);
+      roleRecommendations = hasStrongCvRec
+        ? [...roleRecommendations, targetRec]
+        : [targetRec, ...roleRecommendations];
+    }
   }
 
   const dynamicSearchTerms = buildDynamicSearchTerms(roleRecommendations, config, latestContext);

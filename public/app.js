@@ -323,10 +323,18 @@ function renderProfileFacts(profile) {
   const searchTerms = (profile.searchTerms ?? []).slice(0, 4);
   const matchedTerms = (profile.matchedTerms ?? []).slice(0, 6);
 
+  // Show CV-matched config terms when present. When absent but a target role was
+  // typed, surface it clearly labeled as user input — not as CV evidence.
+  const evidenceText = matchedTerms.length
+    ? matchedTerms.join(", ")
+    : profile.targetRoleInput
+      ? `Target role: ${profile.targetRoleInput}`
+      : "No evidence yet";
+
   return [
     ["Best direction", topRole ? `${topRole.title} (${topRole.score}%)` : "Not detected yet"],
     ["Search terms", searchTerms.length ? searchTerms.join(", ") : "No terms yet"],
-    ["Profile evidence", matchedTerms.length ? matchedTerms.join(", ") : "No evidence yet"]
+    ["Profile evidence", evidenceText]
   ].map(([label, value]) => `
     <article class="profile-fact-card">
       <span>${escapeHtml(label)}</span>

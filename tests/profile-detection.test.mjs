@@ -59,7 +59,7 @@ for (const { input, expected } of fallbackCases) {
 }
 console.log("Test A2 (fallback is generic): PASSED");
 
-// ─── Test A3: strong CV is NOT overridden by targetRoleInput ─────────────────
+// ─── Test A3: strong CV keeps its direction first; targetRoleInput is secondary ─
 
 const devCV = `Professional Experience
 2021 - present | Full Stack Developer, TechCorp
@@ -72,12 +72,22 @@ console.log("Strong CV + conflicting targetRoleInput:");
 console.log("  roleRecommendations:", strongProfile.roleRecommendations.map((r) => `${r.id} (${r.score})`));
 
 assert.ok(strongProfile.roleRecommendations.length >= 1, "dev CV should produce CV-derived recommendations");
-assert.ok(strongProfile.roleRecommendations.every((r) => !r.fromTargetRoleInput),
-  "a strong CV must NOT trigger the targetRoleInput fallback");
 assert.equal(strongProfile.roleRecommendations[0].id, "software-development",
-  "dev CV should resolve to software-development from CV evidence");
+  "strong dev CV must stay first even when targetRoleInput conflicts");
+assert.ok(!strongProfile.roleRecommendations[0].fromTargetRoleInput,
+  "the leading recommendation for a strong CV must come from CV evidence, not targetRoleInput");
+// Phase 7B: targetRoleInput may appear as a secondary recommendation for display
+// purposes, but the leading direction is always CV-derived when score >= 75.
+const hrEntry = strongProfile.roleRecommendations.find((r) => r.id === "hr-recruiting");
+if (hrEntry) {
+  assert.ok(hrEntry.fromTargetRoleInput, "secondary hr entry must be tagged fromTargetRoleInput");
+  assert.ok(
+    strongProfile.roleRecommendations.indexOf(hrEntry) > 0,
+    "hr secondary entry must not be at position 0"
+  );
+}
 
-console.log("Test A3 (strong CV unchanged): PASSED");
+console.log("Test A3 (strong CV direction preserved): PASSED");
 
 // ─── Test B1: Hebrew CVs produce profile evidence generically ────────────────
 

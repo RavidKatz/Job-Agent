@@ -891,56 +891,84 @@ const MODEL_WEIGHTS = {
 // English category labels per direction, used when the legacy category
 // taxonomy has no entry but the job matches the candidate's direction.
 const DIRECTION_LABEL = {
-  "ai-ops": "AI / Product Ops",
-  "pmo": "PMO",
-  "operations": "Operations",
-  "product-ops": "Product Ops",
-  "implementation": "Implementation",
-  "data-bi": "Data / BI",
-  "engineering": "Software Development",
-  "research": "Research",
-  "finance": "Finance",
-  "general": "General"
+  "ai-ops":        "AI / Product Ops",
+  "pmo":           "PMO",
+  "operations":    "Operations",
+  "product-ops":   "Product Ops",
+  "implementation":"Implementation",
+  "data-bi":       "Data / BI",
+  "engineering":   "Software Development",
+  "research":      "Research",
+  "finance":       "Finance",
+  "hr-recruiting": "HR & Recruiting",
+  "sales":         "Sales & Customer Service",
+  "marketing":     "Marketing & Content",
+  "logistics":     "Logistics & Supply Chain",
+  "admin":         "Administration",
+  "design":        "Design & UX",
+  "legal":         "Legal & Compliance",
+  "general":       "General"
 };
 
 // Hebrew labels for the inferred job direction, used in the explanation output.
 const DIRECTION_HE = {
-  "ai-ops": "AI ותפעול מוצר",
-  "pmo": "ניהול וריכוז פרויקטים / PMO",
-  "operations": "תפעול ושיפור תהליכים",
-  "product-ops": "תפעול מוצר",
-  "implementation": "הטמעה ומערכות מידע",
-  "data-bi": "דאטה ו-BI",
-  "engineering": "פיתוח תוכנה",
-  "research": "מחקר ואלגוריתמיקה",
-  "finance": "כספים וחשבונאות",
-  "general": "כללי"
+  "ai-ops":        "AI ותפעול מוצר",
+  "pmo":           "ניהול וריכוז פרויקטים / PMO",
+  "operations":    "תפעול ושיפור תהליכים",
+  "product-ops":   "תפעול מוצר",
+  "implementation":"הטמעה ומערכות מידע",
+  "data-bi":       "דאטה ו-BI",
+  "engineering":   "פיתוח תוכנה",
+  "research":      "מחקר ואלגוריתמיקה",
+  "finance":       "כספים וחשבונאות",
+  "hr-recruiting": "גיוס ומשאבי אנוש",
+  "sales":         "מכירות ושירות לקוחות",
+  "marketing":     "שיווק ותוכן",
+  "logistics":     "לוגיסטיקה ושרשרת אספקה",
+  "admin":         "ניהול משרד ואדמיניסטרציה",
+  "design":        "עיצוב וחוויית משתמש",
+  "legal":         "משפטי וציות",
+  "general":       "כללי"
 };
 
 // Maps recommended role families to a normalized job direction, so the model
 // can tell whether a job's direction matches the candidate's real directions.
 const ROLE_FAMILY_DIRECTION = {
-  "ai-solutions": "ai-ops",
-  "project-coordination": "pmo",
+  "ai-solutions":           "ai-ops",
+  "project-coordination":   "pmo",
   "data-business-analysis": "data-bi",
-  "implementation-erp": "implementation",
-  "digital-projects": "product-ops",
-  "operations": "operations",
-  "product-operations": "product-ops",
-  "software-development": "engineering",
-  "finance-accounting": "finance"
+  "implementation-erp":     "implementation",
+  "digital-projects":       "product-ops",
+  "operations":             "operations",
+  "product-operations":     "product-ops",
+  "software-development":   "engineering",
+  "finance-accounting":     "finance",
+  "hr-recruiting":          "hr-recruiting",
+  "sales-customer-service": "sales",
+  "marketing-content":      "marketing",
+  "logistics-supply-chain": "logistics",
+  "administration-office":  "admin",
+  "design":                 "design",
+  "legal":                  "legal"
 };
 
 // Title keywords grouped by the direction they signal. Used for a robust,
 // word-order-independent title alignment that does not depend on exact phrases.
 const TITLE_DIRECTION_KEYWORDS = {
-  "ai-ops": ["ai", "automation", "workflow"],
-  "pmo": ["pmo", "project manager", "project coordinator", "project"],
-  "operations": ["operations", "process"],
-  "product-ops": ["product"],
-  "implementation": ["implementation", "systems", "erp", "crm", "netsuite"],
-  "data-bi": ["data", "bi", "analyst", "analytics"],
-  "finance": ["finance", "accounting", "bookkeeper"]
+  "ai-ops":        ["ai", "automation", "workflow"],
+  "pmo":           ["pmo", "project manager", "project coordinator", "project"],
+  "operations":    ["operations", "process"],
+  "product-ops":   ["product"],
+  "implementation":["implementation", "systems", "erp", "crm", "netsuite"],
+  "data-bi":       ["data", "bi", "analyst", "analytics"],
+  "finance":       ["finance", "accounting", "bookkeeper"],
+  "hr-recruiting": ["recruiter", "recruiting", "talent acquisition", "hr", "human resources"],
+  "sales":         ["sales", "account manager", "customer success", "customer service"],
+  "marketing":     ["marketing", "content", "social media", "digital marketing"],
+  "logistics":     ["logistics", "supply chain", "procurement", "inventory"],
+  "admin":         ["office manager", "administrative", "back office", "executive assistant"],
+  "design":        ["designer", "ux", "ui", "graphic design"],
+  "legal":         ["legal", "counsel", "compliance", "contract"]
 };
 
 function clamp01(value) {
@@ -949,11 +977,24 @@ function clamp01(value) {
 
 // Builds the set of directions the candidate genuinely fits, from the education
 // field directions plus the strongest resume-based role recommendations.
+// Also includes a soft direction from targetRoleInput (mirrors buildGateState).
 function buildCandidateDirections(resumeProfile) {
   const directions = new Set(resumeProfile.education?.directions ?? []);
   for (const role of (resumeProfile.roleRecommendations ?? []).slice(0, 4)) {
     const direction = ROLE_FAMILY_DIRECTION[role.id];
     if (direction) directions.add(direction);
+  }
+  // Add the soft direction from targetRoleInput only when it leads the profile
+  // (i.e. CV-derived evidence is weak). When a strong CV direction already
+  // exists, adding the target direction here would inflate scores for jobs the
+  // CV does not genuinely support.
+  if (resumeProfile.targetRoleInput) {
+    const topRec = (resumeProfile.roleRecommendations ?? [])[0];
+    if (topRec?.fromTargetRoleInput) {
+      const fam = inferJobFamily(resumeProfile.targetRoleInput);
+      const dir = ROLE_FAMILY_DIRECTION[fam ?? ""];
+      if (dir) directions.add(dir);
+    }
   }
   return directions;
 }
