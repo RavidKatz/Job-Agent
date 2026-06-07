@@ -7,6 +7,7 @@ import {
   extractLatestResumeContext,
   inferSeniority,
   inferYearsExperience,
+  recommendRoleFromTargetInput,
   recommendRoles
 } from "./role-recommender.mjs";
 
@@ -29,7 +30,17 @@ export function buildResumeProfile(resumeText, config) {
   });
   const yearsExperience = inferYearsExperience(resumeText);
   const latestContext = extractLatestResumeContext(resumeText, config);
-  const roleRecommendations = recommendRoles(resumeText, config, latestContext);
+  let roleRecommendations = recommendRoles(resumeText, config, latestContext);
+
+  // Fallback: when the CV produces no strong recommendation, seed the candidate
+  // direction from the explicitly typed target role. This keeps "best direction",
+  // role recommendations, direction signals, and the per-job evidence chain
+  // populated for sparse or non-English CVs. Strong CVs are left untouched.
+  if (!roleRecommendations.length && config.targetRoleInput) {
+    const fallback = recommendRoleFromTargetInput(config.targetRoleInput);
+    if (fallback) roleRecommendations = [fallback];
+  }
+
   const dynamicSearchTerms = buildDynamicSearchTerms(roleRecommendations, config, latestContext);
   const searchTermWarning = dynamicSearchTerms.length
     ? null

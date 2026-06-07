@@ -62,6 +62,8 @@ const DIRECTION_LABEL_EN = {
   "marketing": "Marketing & Content",
   "logistics": "Logistics & Supply Chain",
   "admin": "Administration",
+  "design": "Design & UX",
+  "legal": "Legal & Compliance",
   "general": "General"
 };
 
@@ -81,7 +83,9 @@ const FAMILY_TO_DIRECTION = {
   "sales-customer-service":"sales",
   "marketing-content":   "marketing",
   "logistics-supply-chain":"logistics",
-  "administration-office":"admin"
+  "administration-office":"admin",
+  "design":               "design",
+  "legal":                "legal"
 };
 
 // ---------------------------------------------------------------------------

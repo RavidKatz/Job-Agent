@@ -32,7 +32,9 @@ const FAMILY_DIRECTION_MAP = {
   "sales-customer-service": "sales",
   "marketing-content":      "marketing",
   "logistics-supply-chain": "logistics",
-  "administration-office":  "admin"
+  "administration-office":  "admin",
+  "design":                 "design",
+  "legal":                  "legal"
 };
 
 // Tokens that are too generic to serve as relevance signals on their own

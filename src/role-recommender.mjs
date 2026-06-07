@@ -375,6 +375,75 @@ const ROLE_FAMILIES = [
       "Matches administrative and office-management resumes",
       "Avoids forcing technical PMO searches when the resume is office-focused"
     ]
+  },
+  {
+    id: "design",
+    title: "Design and user experience",
+    searchTerms: [
+      "UX Designer",
+      "UI Designer",
+      "Graphic Designer",
+      "Product Designer",
+      "Visual Designer"
+    ],
+    signals: [
+      "ux",
+      "ui",
+      "figma",
+      "graphic design",
+      "product design",
+      "user experience",
+      "user interface",
+      "visual design",
+      "brand design",
+      "wireframe",
+      "prototype",
+      "ux/ui",
+      "ui/ux",
+      "עיצוב",
+      "מעצב",
+      "מעצבת",
+      "עיצוב גרפי",
+      "עיצוב מוצר"
+    ],
+    reasons: [
+      "Matches resumes with UX, UI, graphic, and product design experience",
+      "Uses visual design and tooling signals from the resume"
+    ]
+  },
+  {
+    id: "legal",
+    title: "Legal and compliance",
+    searchTerms: [
+      "Legal Counsel",
+      "Legal Advisor",
+      "Corporate Lawyer",
+      "Compliance Manager",
+      "Contract Manager"
+    ],
+    signals: [
+      "legal counsel",
+      "legal advisor",
+      "in-house counsel",
+      "corporate law",
+      "contract review",
+      "legal department",
+      "litigation",
+      "attorney",
+      "lawyer",
+      "ייעוץ משפטי",
+      "עורך דין",
+      "עורכת דין",
+      "משפטי",
+      "חוזים",
+      "דיני עבודה",
+      "דיני חברות",
+      "עו\"ד"
+    ],
+    reasons: [
+      "Matches resumes with legal, compliance, and contract management experience",
+      "Uses legal vocabulary signals from the resume"
+    ]
   }
 ];
 
@@ -973,18 +1042,14 @@ export function inferJobFamily(text) {
   return bestScore >= 2 ? bestId : null;
 }
 
-// Expands a free-text target role into a small set of generic search terms by
-// matching it against the ROLE_FAMILIES taxonomy and adding the exact input.
-// This is intentionally generic — the same function works for any profession.
-export function expandTargetRoleTerms(targetRoleInput) {
-  if (!targetRoleInput || !String(targetRoleInput).trim()) return [];
-  const input = String(targetRoleInput).trim();
-  const normalizedInput = normalizeText(input);
+// Finds the ROLE_FAMILIES entry that best matches a free-text target role.
+// Generic and language-agnostic: matches the input against family signals and
+// search terms in both directions so short inputs ("HR") and longer ones
+// ("Marketing Coordinator") both resolve. Returns null when nothing matches.
+function bestFamilyForTargetInput(targetRoleInput) {
+  if (!targetRoleInput || !String(targetRoleInput).trim()) return null;
+  const normalizedInput = normalizeText(targetRoleInput);
 
-  // Always include the exact input first (highest priority).
-  const terms = [input];
-
-  // Find the role family that best matches the target role text.
   let bestFamily = null;
   let bestScore = 0;
   for (const family of ROLE_FAMILIES) {
@@ -997,8 +1062,44 @@ export function expandTargetRoleTerms(targetRoleInput) {
     }
   }
 
+  return bestScore >= 1 ? bestFamily : null;
+}
+
+// Builds a single fallback role recommendation from a free-text target role.
+// Used when the CV itself yields no strong recommendation, so the candidate
+// profile (best direction, evidence chain, direction signals) can still be
+// populated from what the user explicitly typed. Generic across professions.
+export function recommendRoleFromTargetInput(targetRoleInput) {
+  const family = bestFamilyForTargetInput(targetRoleInput);
+  if (!family) return null;
+
+  const input = String(targetRoleInput).trim();
+  return {
+    id: family.id,
+    title: family.title,
+    score: 60,
+    searchTerms: family.searchTerms,
+    matchedSignals: uniqueSorted([input, ...family.searchTerms.slice(0, 3)]),
+    reasons: family.reasons,
+    fromTargetRoleInput: true
+  };
+}
+
+// Expands a free-text target role into a small set of generic search terms by
+// matching it against the ROLE_FAMILIES taxonomy and adding the exact input.
+// This is intentionally generic — the same function works for any profession.
+export function expandTargetRoleTerms(targetRoleInput) {
+  if (!targetRoleInput || !String(targetRoleInput).trim()) return [];
+  const input = String(targetRoleInput).trim();
+
+  // Always include the exact input first (highest priority).
+  const terms = [input];
+
+  // Find the role family that best matches the target role text.
+  const bestFamily = bestFamilyForTargetInput(input);
+
   // If a family matched, add its search terms (skip ones already present).
-  if (bestFamily && bestScore >= 1) {
+  if (bestFamily) {
     for (const term of bestFamily.searchTerms) {
       const normalized = normalizeText(term);
       if (normalized && !terms.some((t) => normalizeText(t) === normalized)) {

@@ -139,7 +139,8 @@
     "Warehouse",
     "Administration",
     "Office Management",
-    "Back Office"
+    "Back Office",
+    "Compliance"
   ],
   "skillAliases": {
     "AI": [
@@ -282,7 +283,10 @@
       "manage initiatives end to end",
       "planning",
       "scheduling",
-      "ensuring timely delivery"
+      "ensuring timely delivery",
+      "ניהול פרויקטים",
+      "פרויקטים",
+      "תכנון פרויקט"
     ],
     "Process Improvement": [
       "improve processes",
@@ -304,6 +308,240 @@
       "architects",
       "local authorities",
       "municipalities"
+    ],
+    "Human Resources": [
+      "human resources",
+      "hr",
+      "משאבי אנוש",
+      "משאבי-אנוש",
+      "מש\"א",
+      "hr generalist",
+      "hr business partner",
+      "hrbp"
+    ],
+    "Recruiting": [
+      "recruiting",
+      "recruitment",
+      "recruiter",
+      "sourcing",
+      "screening",
+      "hiring managers",
+      "candidates",
+      "interviews",
+      "גיוס",
+      "מגייס",
+      "מגייסת",
+      "מגייסים",
+      "סורסינג",
+      "מועמדים",
+      "ראיונות",
+      "ראיון",
+      "מיון מועמדים"
+    ],
+    "Talent Acquisition": [
+      "talent acquisition",
+      "talent",
+      "גיוס",
+      "גיוס טכנולוגי",
+      "טאלנט"
+    ],
+    "Onboarding": [
+      "onboarding",
+      "קליטה",
+      "קליטת עובדים",
+      "הטמעת עובדים"
+    ],
+    "PMO": [
+      "pmo",
+      "project management office",
+      "ניהול פרויקטים",
+      "משרד לניהול פרויקטים"
+    ],
+    "Project Manager": [
+      "project manager",
+      "project management",
+      "מנהל פרויקטים",
+      "מנהלת פרויקטים",
+      "ניהול פרויקטים"
+    ],
+    "QA": [
+      "qa",
+      "quality assurance",
+      "testing",
+      "בדיקות",
+      "בדיקות תוכנה",
+      "בדיקות איכות",
+      "qa engineer",
+      "בודק תוכנה",
+      "בודקת תוכנה"
+    ],
+    "Customer Success": [
+      "customer success",
+      "csm",
+      "customer success manager",
+      "ניהול לקוחות",
+      "לקוחות",
+      "קסטומר סאקסס"
+    ],
+    "Account Management": [
+      "account management",
+      "account manager",
+      "key account",
+      "ניהול תיקי לקוחות",
+      "ניהול חשבונות",
+      "תיקי לקוחות"
+    ],
+    "SEO": [
+      "seo",
+      "search engine optimization",
+      "קידום אתרים",
+      "קידום אורגני"
+    ],
+    "PPC": [
+      "ppc",
+      "pay per click",
+      "google ads",
+      "paid media",
+      "performance marketing",
+      "פרסום ממומן",
+      "גוגל אדס",
+      "מדיה ממומנת"
+    ],
+    "Marketing": [
+      "marketing",
+      "שיווק",
+      "אשת שיווק",
+      "איש שיווק",
+      "קמפיינים",
+      "קמפיין"
+    ],
+    "Digital Marketing": [
+      "digital marketing",
+      "שיווק דיגיטלי",
+      "דיגיטל"
+    ],
+    "Content": [
+      "content",
+      "תוכן",
+      "כתיבת תוכן",
+      "ניהול תוכן",
+      "קופירייטינג"
+    ],
+    "Social Media": [
+      "social media",
+      "רשתות חברתיות",
+      "מדיה חברתית",
+      "סושיאל"
+    ],
+    "Accounting": [
+      "accounting",
+      "חשבונאות",
+      "הנהלת חשבונות",
+      "חשב",
+      "חשבת",
+      "רואה חשבון"
+    ],
+    "Bookkeeping": [
+      "bookkeeping",
+      "הנהלת חשבונות",
+      "הנהח",
+      "מנהל חשבונות",
+      "מנהלת חשבונות"
+    ],
+    "Payroll": [
+      "payroll",
+      "שכר",
+      "חשב שכר",
+      "חשבת שכר"
+    ],
+    "Finance": [
+      "finance",
+      "כספים",
+      "פיננסים",
+      "מחלקת כספים"
+    ],
+    "Sales": [
+      "sales",
+      "מכירות",
+      "איש מכירות",
+      "אשת מכירות",
+      "נציג מכירות"
+    ],
+    "Customer Service": [
+      "customer service",
+      "שירות לקוחות",
+      "נציג שירות"
+    ],
+    "Customer Support": [
+      "customer support",
+      "תמיכת לקוחות",
+      "תמיכה טכנית"
+    ],
+    "Software Developer": [
+      "software developer",
+      "developer",
+      "מפתח",
+      "מפתחת",
+      "מתכנת",
+      "מתכנתת",
+      "פיתוח תוכנה"
+    ],
+    "Software Engineering": [
+      "software engineering",
+      "הנדסת תוכנה",
+      "פיתוח"
+    ],
+    "Operations": [
+      "operations",
+      "תפעול",
+      "מנהל תפעול",
+      "מנהלת תפעול"
+    ],
+    "Logistics": [
+      "logistics",
+      "לוגיסטיקה"
+    ],
+    "Supply Chain": [
+      "supply chain",
+      "שרשרת אספקה"
+    ],
+    "Procurement": [
+      "procurement",
+      "רכש"
+    ],
+    "Purchasing": [
+      "purchasing",
+      "רכש",
+      "קניין",
+      "קניינית"
+    ],
+    "Administration": [
+      "administration",
+      "administrative",
+      "אדמיניסטרציה",
+      "מנהלה",
+      "אדמיניסטרטיבי"
+    ],
+    "Office Management": [
+      "office management",
+      "office manager",
+      "ניהול משרד",
+      "מנהל משרד",
+      "מנהלת משרד"
+    ],
+    "Back Office": [
+      "back office",
+      "בק אופיס",
+      "תפעול אחורי"
+    ],
+    "Compliance": [
+      "compliance manager",
+      "compliance officer",
+      "regulatory compliance",
+      "gdpr",
+      "ציות לרגולציה",
+      "קצין ציות",
+      "מנהל ציות"
     ]
   },
   "domainKeywords": [
