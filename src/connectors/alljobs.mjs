@@ -1,6 +1,6 @@
 import { normalizeTerms } from "./http.mjs";
 import { absolutizeUrl, decodeHtml, fetchHtml, uniqueBy } from "./html.mjs";
-import { normalizeJob } from "./job-model.mjs";
+import { isSearchShortcutUrl, normalizeJob } from "./job-model.mjs";
 
 function buildUrl(template, term) {
   return template.replaceAll("{queryEncoded}", encodeURIComponent(term)).replaceAll("{query}", term);
@@ -22,6 +22,8 @@ function parseAllJobsPage(html, pageUrl, source) {
     const typeMatch = block.match(/<div class="\s*job-content-top-type">([\s\S]*?)<\/div>/i);
     const descriptionMatch = block.match(/<div class="job-content-top-desc[^"]*">([\s\S]*?)(?=<div class="job-content-top-desc"|<div class="H5"|<div id="job-content-bottom)/i);
     const idMatch = titleMatch[1].match(/JobID=(\d+)/i);
+    const applyUrl = absolutizeUrl(titleMatch[1], pageUrl);
+    if (isSearchShortcutUrl(applyUrl)) continue;
 
     jobs.push(normalizeJob({
       id: idMatch?.[1] ?? titleMatch[1],
@@ -30,7 +32,7 @@ function parseAllJobsPage(html, pageUrl, source) {
       location: decodeHtml(locationMatch?.[1]),
       workMode: decodeHtml(typeMatch?.[1]),
       source: source.name ?? "AllJobs",
-      applyUrl: absolutizeUrl(titleMatch[1], pageUrl),
+      applyUrl,
       description: decodeHtml([
         descriptionMatch?.[1],
         locationMatch?.[1],
@@ -44,7 +46,7 @@ function parseAllJobsPage(html, pageUrl, source) {
 }
 
 export async function loadAllJobs(source) {
-  const terms = normalizeTerms(source.searchTerms ?? ["PMO"]);
+  const terms = normalizeTerms(source.searchTerms ?? []);
   const maxQueries = source.maxQueries ?? 3;
   const template = source.urlTemplate ?? "https://www.alljobs.co.il/SearchResultsGuest.aspx?keyWord={queryEncoded}";
   const jobs = [];

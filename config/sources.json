@@ -16,12 +16,7 @@
           "url": "https://hiremetech.com/jobs-app?view=jobs&sort_by=posted_date&sort_order=desc&country=Israel"
         }
       ],
-      "searchTerms": [
-        "AI Project Manager",
-        "PMO",
-        "Digital Project Manager",
-        "Business Applications Manager"
-      ]
+      "searchTerms": []
     },
     {
       "id": "remotive",
@@ -31,12 +26,7 @@
       "useProfileSearchTerms": true,
       "maxQueries": 4,
       "limit": 20,
-      "searchTerms": [
-        "project manager",
-        "operations manager",
-        "product operations",
-        "ai project manager"
-      ]
+      "searchTerms": []
     },
     {
       "id": "himalayas",
@@ -45,12 +35,7 @@
       "enabled": true,
       "useProfileSearchTerms": true,
       "maxQueries": 4,
-      "searchTerms": [
-        "project manager",
-        "operations manager",
-        "product operations",
-        "ai project manager"
-      ]
+      "searchTerms": []
     },
     {
       "id": "linkedin-search",
@@ -60,12 +45,7 @@
       "useProfileSearchTerms": true,
       "maxQueries": 8,
       "urlTemplate": "https://www.linkedin.com/jobs/search/?keywords={queryEncoded}&location=Israel",
-      "searchTerms": [
-        "AI Project Manager",
-        "PMO",
-        "Digital Project Manager",
-        "Business Applications Manager"
-      ],
+      "searchTerms": [],
       "reason": "LinkedIn does not provide a simple public candidate job-search API. This opens exact search pages until an approved API or data provider is connected."
     },
     {
@@ -83,12 +63,7 @@
           "url": "https://www.alljobs.co.il/"
         }
       ],
-      "searchTerms": [
-        "AI Project Manager",
-        "PMO",
-        "Digital Project Manager",
-        "Business Applications Manager"
-      ],
+      "searchTerms": [],
       "reason": "No public official API documentation was found. This opens search pages until an approved feed or API is connected."
     },
     {
@@ -107,12 +82,7 @@
           "url": "https://www.drushim.co.il/jobs/subcat/56-70-111-231-324-398-463-720/?experience=1-2&ssaen=3"
         }
       ],
-      "searchTerms": [
-        "AI Project Manager",
-        "PMO",
-        "Digital Project Manager",
-        "Business Applications Manager"
-      ],
+      "searchTerms": [],
       "reason": "No public official API documentation was found. This opens search pages until an approved feed or API is connected."
     },
     {

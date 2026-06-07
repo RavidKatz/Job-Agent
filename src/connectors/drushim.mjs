@@ -2,18 +2,40 @@ import { normalizeTerms } from "./http.mjs";
 import { absolutizeUrl, decodeHtml, fetchHtml, uniqueBy } from "./html.mjs";
 import { normalizeJob } from "./job-model.mjs";
 
+// Role-indicator tokens used to decide whether a quoted string looks like a job
+// title. Keep this list broad enough to cover any profession family — the goal
+// is to distinguish titles from navigation labels, CSS snippets, and other page
+// noise, not to restrict to a single domain.
 const TITLE_HINTS = [
-  "מנהל",
-  "מנהלת",
-  "פרויקט",
-  "פרויקטים",
-  "מערכות מידע",
-  "מיישם",
-  "BI",
-  "Data",
-  "Customer Success",
-  "Product",
-  "PMO"
+  // Software / Tech
+  "Developer", "Engineer", "Full Stack", "Backend", "Frontend", "QA", "DevOps",
+  "Data", "BI",
+  // HR / Recruiting
+  "HR", "Recruiter", "Talent", "Recruitment",
+  "גיוס", "מגייס", "מגייסת", "משאבי אנוש",
+  // Marketing
+  "Marketing", "Digital", "Content", "Social Media", "PPC", "SEO",
+  "שיווק", "דיגיטל", "תוכן",
+  // Finance
+  "Finance", "Accountant", "Bookkeeper", "Payroll",
+  "כספים", "הנהלת חשבונות", "חשב", "חשבת",
+  // Sales / Customer
+  "Sales", "Account Manager", "Customer Success", "Customer Service",
+  "מכירות", "לקוחות",
+  // Product / Project / PMO
+  "Product", "Project", "PMO", "Implementation",
+  "מוצר", "פרויקט", "פרויקטים", "יישום",
+  // Operations / Admin / Coordination
+  "Operations", "Coordinator", "Administrator", "Office Manager",
+  "תפעול", "רכז", "רכזת", "אדמיניסטרציה", "מנהל", "מנהלת",
+  // Design
+  "Designer", "UX", "UI",
+  "עיצוב", "מעצב", "מעצבת",
+  // Logistics / Supply Chain
+  "Logistics", "Supply Chain", "Procurement",
+  "לוגיסטיקה", "רכש",
+  // Legacy (keep for backward compat)
+  "מערכות מידע", "מיישם",
 ];
 
 function buildUrl(template, term) {
@@ -44,7 +66,7 @@ function looksLikeJobTitle(value) {
   if (/^[a-z0-9_-]+$/i.test(text)) return false;
 
   const hasHebrew = /[\u0590-\u05ff]/.test(text);
-  const hasEnglishRole = /\b(Data Analyst|BI|Product|Customer Success|PMO)\b/i.test(text);
+  const hasEnglishRole = /\b(Developer|Engineer|Designer|Recruiter|Talent|HR|Marketing|Finance|Accountant|Bookkeeper|Sales|Coordinator|Manager|Analyst|Specialist|Product|Project|PMO|Operations|Logistics|Customer Success|Customer Service|QA|DevOps|Data|BI|Full Stack|Backend|Frontend|UX|UI|Supply Chain|Procurement|Implementation|Executive Assistant|Office Manager)\b/i.test(text);
   if (!hasHebrew && !hasEnglishRole) return false;
 
   return TITLE_HINTS.some((hint) => text.toLowerCase().includes(hint.toLowerCase()));
@@ -101,7 +123,7 @@ function parseDrushimPage(html, pageUrl, source) {
 }
 
 export async function loadDrushim(source) {
-  const terms = normalizeTerms(source.searchTerms ?? ["PMO"]);
+  const terms = normalizeTerms(source.searchTerms ?? []);
   const maxQueries = source.maxQueries ?? 2;
   const template = source.urlTemplate ?? "https://www.drushim.co.il/jobs/search/{queryEncoded}/";
   const urls = [

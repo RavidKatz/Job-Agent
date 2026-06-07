@@ -121,7 +121,7 @@ function isSuspiciousCompany(company) {
 
 // Detects an apply URL that points to a search results page rather than a
 // specific job posting (a "search shortcut").
-function isSearchShortcutUrl(url) {
+export function isSearchShortcutUrl(url) {
   if (!url) return false;
   const text = String(url).toLowerCase();
   const looksLikeSearch = /\/search\/|searchresults|\/results\b|[?&](q|query|keyword|keywords)=/.test(text);
