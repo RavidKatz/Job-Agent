@@ -1,5 +1,6 @@
 const DEFAULT_MODEL = "claude-3-5-haiku-latest";
 const DEFAULT_TIMEOUT_MS = 12000;
+const ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages";
 
 const PROFILE_SCHEMA = {
   type: "object",
@@ -127,24 +128,9 @@ function extractResponsePayload(response) {
   return extractJsonFromText(text);
 }
 
-async function createDefaultClient(apiKey) {
-  const mod = await import("@anthropic-ai/sdk");
-  const Anthropic = mod.default ?? mod.Anthropic;
-  return new Anthropic({ apiKey });
-}
-
-function withTimeout(promise, timeoutMs) {
-  let timer;
-  const timeout = new Promise((_, reject) => {
-    timer = setTimeout(() => reject(new Error("Claude profile analysis timed out.")), timeoutMs);
-  });
-
-  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
-}
-
 export async function analyzeWithClaude(resumeText, config = {}, options = {}) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey && !options.client) return null;
+  if (!apiKey && !options.fetchImpl) return null;
 
   const timeoutMs = Number(options.timeoutMs)
     || timeoutMsFromEnv(process.env.CLAUDE_PROFILE_TIMEOUT_MS);
@@ -152,9 +138,22 @@ export async function analyzeWithClaude(resumeText, config = {}, options = {}) {
     || process.env.CLAUDE_PROFILE_MODEL
     || DEFAULT_MODEL;
 
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
   try {
-    const client = options.client ?? await createDefaultClient(apiKey);
-    const response = await withTimeout(client.messages.create({
+    const fetchImpl = options.fetchImpl ?? globalThis.fetch;
+    if (typeof fetchImpl !== "function") return null;
+
+    const response = await fetchImpl(ANTHROPIC_MESSAGES_URL, {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": apiKey ?? "",
+        "anthropic-version": "2023-06-01"
+      },
+      body: JSON.stringify({
       model,
       max_tokens: 900,
       temperature: 0,
@@ -175,10 +174,16 @@ export async function analyzeWithClaude(resumeText, config = {}, options = {}) {
           String(resumeText ?? "").slice(0, 18000)
         ].join("\n\n")
       }]
-    }), timeoutMs);
+      })
+    });
 
-    return sanitizeClaudeProfile(extractResponsePayload(response));
+    if (!response?.ok) return null;
+    const payload = await response.json();
+
+    return sanitizeClaudeProfile(extractResponsePayload(payload));
   } catch {
     return null;
+  } finally {
+    clearTimeout(timer);
   }
 }

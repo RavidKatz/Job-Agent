@@ -26,11 +26,14 @@ function restoreEnv() {
   }
 }
 
-function mockClient(responseFactory) {
+function mockFetch(responseFactory) {
+  return async (url, request) => responseFactory(url, request);
+}
+
+function jsonResponse(payload, ok = true) {
   return {
-    messages: {
-      create: async (payload) => responseFactory(payload)
-    }
+    ok,
+    json: async () => payload
   };
 }
 
@@ -52,11 +55,16 @@ try {
   const noKey = await analyzeWithClaude("Resume text", {});
   assert.equal(noKey, null, "missing API key without mock client should return null");
 
+  process.env.ANTHROPIC_API_KEY = "test-key";
   const validProfile = await analyzeWithClaude("Resume text", {}, {
-    client: mockClient((payload) => {
+    fetchImpl: mockFetch((url, request) => {
+      assert.equal(url, "https://api.anthropic.com/v1/messages");
+      assert.equal(request.method, "POST");
+      assert.equal(request.headers["x-api-key"], "test-key");
+      const payload = JSON.parse(request.body);
       assert.equal(payload.temperature, 0);
       assert.ok(payload.tools?.[0]?.input_schema, "structured tool schema should be sent");
-      return {
+      return jsonResponse({
         content: [{
           type: "tool_use",
           name: "emit_candidate_profile",
@@ -75,7 +83,7 @@ try {
             claudeSuggestedRoles: ["Recruiter", "Talent Acquisition Specialist"]
           }
         }]
-      };
+      });
     })
   });
 
@@ -95,7 +103,7 @@ try {
   });
 
   const textJsonProfile = await analyzeWithClaude("Resume text", {}, {
-    client: mockClient(() => ({
+    fetchImpl: mockFetch(() => jsonResponse({
       content: [{
         type: "text",
         text: JSON.stringify({
@@ -113,18 +121,25 @@ try {
   assert.equal(textJsonProfile.claudeSuggestedRoles[0], "HR Coordinator");
 
   const invalidJson = await analyzeWithClaude("Resume text", {}, {
-    client: mockClient(() => ({
+    fetchImpl: mockFetch(() => jsonResponse({
       content: [{ type: "text", text: "not json" }]
     }))
   });
   assert.equal(invalidJson, null, "invalid JSON should return null");
+
+  const apiError = await analyzeWithClaude("Resume text", {}, {
+    fetchImpl: mockFetch(() => jsonResponse({ error: "bad request" }, false))
+  });
+  assert.equal(apiError, null, "API error should return null");
 
   const invalidSchema = sanitizeClaudeProfile("bad payload");
   assert.equal(invalidSchema, null, "invalid schema should sanitize to null");
 
   const timeout = await analyzeWithClaude("Resume text", {}, {
     timeoutMs: 5,
-    client: mockClient(() => new Promise(() => {}))
+    fetchImpl: mockFetch((url, request) => new Promise((resolve, reject) => {
+      request.signal.addEventListener("abort", () => reject(new Error("aborted")));
+    }))
   });
   assert.equal(timeout, null, "timeout should return null");
 
