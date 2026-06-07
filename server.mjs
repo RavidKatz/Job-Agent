@@ -3,8 +3,9 @@ import fs from "node:fs/promises";
 import http from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { analyzeWithClaude } from "./src/claude-profile.mjs";
 import { analyzeJobsWithProfile, loadConfig, loadJobs } from "./src/pipeline.mjs";
-import { buildResumeProfile } from "./src/profile.mjs";
+import { buildResumeProfile, mergeClaudeProfile } from "./src/profile.mjs";
 import { toCsv } from "./src/io.mjs";
 import { AuthStore } from "./src/server/auth-store.mjs";
 import { parseMultipart, readRequestBody } from "./src/server/multipart.mjs";
@@ -131,7 +132,15 @@ async function handleMatch(request, response) {
     return;
   }
 
-  const resumeProfile = buildResumeProfile(resumeText, config);
+  const ruleBasedProfile = buildResumeProfile(resumeText, config);
+  const claudeStartedAt = Date.now();
+  const claudeProfile = await analyzeWithClaude(resumeText, config);
+  console.info("Claude profile analysis", {
+    textLength: resumeText.length,
+    success: Boolean(claudeProfile),
+    durationMs: Date.now() - claudeStartedAt
+  });
+  const resumeProfile = mergeClaudeProfile(ruleBasedProfile, claudeProfile);
   if (user) {
     await authStore.saveProfile(user.id, {
       resumeTerms: resumeProfile.matchedConfiguredTerms,

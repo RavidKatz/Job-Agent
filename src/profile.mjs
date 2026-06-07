@@ -79,6 +79,26 @@ export function buildResumeProfile(resumeText, config) {
   };
 }
 
+export function mergeClaudeProfile(resumeProfile, claudeProfile) {
+  if (!claudeProfile) {
+    return {
+      ...resumeProfile,
+      profileSource: "rules"
+    };
+  }
+
+  return {
+    ...resumeProfile,
+    previousRoles: claudeProfile.previousRoles ?? [],
+    languageDetected: claudeProfile.languageDetected ?? null,
+    profileWarnings: claudeProfile.profileWarnings ?? [],
+    extractionQualityNotes: claudeProfile.extractionQualityNotes ?? [],
+    claudeConfidenceScore: claudeProfile.claudeConfidenceScore ?? null,
+    claudeSuggestedRoles: claudeProfile.claudeSuggestedRoles ?? [],
+    profileSource: "claude+rules"
+  };
+}
+
 export function toPublicResumeProfile(resumeProfile) {
   return {
     matchedTerms: resumeProfile.matchedConfiguredTerms,
@@ -91,6 +111,13 @@ export function toPublicResumeProfile(resumeProfile) {
     roleRecommendations: resumeProfile.roleRecommendations,
     searchTerms: resumeProfile.dynamicSearchTerms,
     searchTermWarning: resumeProfile.searchTermWarning,
-    targetRoleInput: resumeProfile.targetRoleInput
+    targetRoleInput: resumeProfile.targetRoleInput,
+    profileSource: resumeProfile.profileSource ?? "rules",
+    previousRoles: resumeProfile.previousRoles ?? [],
+    languageDetected: resumeProfile.languageDetected ?? null,
+    profileWarnings: resumeProfile.profileWarnings ?? [],
+    extractionQualityNotes: resumeProfile.extractionQualityNotes ?? [],
+    claudeConfidenceScore: resumeProfile.claudeConfidenceScore ?? null,
+    claudeSuggestedRoles: resumeProfile.claudeSuggestedRoles ?? []
   };
 }
