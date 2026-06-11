@@ -27,6 +27,7 @@ const roleRecommendations = document.querySelector("#roleRecommendations");
 
 const TRACKER_STORAGE_KEY = "job-agent-application-tracker-v1";
 const TARGET_ROLE_REQUIRED_MESSAGE = "Please enter the role you are looking for, e.g. Recruiter, Product Manager, Junior Project Manager, Full Stack Developer.";
+const SCAN_TIMEOUT_MS = 90000;
 
 let latestCsv = "";
 let latestMatches = [];
@@ -590,7 +591,10 @@ form.addEventListener("submit", async (event) => {
   scanButton.disabled = true;
   exportButton.disabled = true;
 
+  let timeout = null;
   try {
+    const controller = new AbortController();
+    timeout = setTimeout(() => controller.abort(), SCAN_TIMEOUT_MS);
     const formData = new FormData();
     formData.append("resume", resumeFile.files[0]);
     formData.append("minimumScore", minimumScore.value);
@@ -602,7 +606,8 @@ form.addEventListener("submit", async (event) => {
 
     const response = await fetch("/api/match", {
       method: "POST",
-      body: formData
+      body: formData,
+      signal: controller.signal
     });
     const payload = await readJsonResponse(response);
 
@@ -615,8 +620,12 @@ form.addEventListener("submit", async (event) => {
     exportButton.disabled = !latestCsv;
     setStatus(payload.sourceNotices?.[0] || "Scan complete");
   } catch (error) {
-    setStatus(error.message, true);
+    const message = error.name === "AbortError"
+      ? "The scan is taking too long. Please try again with fewer sources or try another role."
+      : error.message;
+    setStatus(message, true);
   } finally {
+    if (timeout) clearTimeout(timeout);
     setScanning(false);
     scanButton.disabled = false;
   }

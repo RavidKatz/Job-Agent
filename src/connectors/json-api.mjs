@@ -16,7 +16,18 @@ function interpolateObject(value) {
 export async function loadJsonApiJobs(source) {
   const url = interpolateEnv(source.url);
   const headers = interpolateObject(source.headers ?? {});
-  const response = await fetch(url, { headers });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), source.timeoutMs ?? 15000);
+
+  let response;
+  try {
+    response = await fetch(url, {
+      headers,
+      signal: controller.signal
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!response.ok) {
     throw new Error(`API source "${source.id}" failed with HTTP ${response.status}.`);
