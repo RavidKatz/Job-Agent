@@ -26,7 +26,6 @@ const profileFacts = document.querySelector("#profileFacts");
 const roleRecommendations = document.querySelector("#roleRecommendations");
 
 const TRACKER_STORAGE_KEY = "job-agent-application-tracker-v1";
-const TARGET_ROLE_REQUIRED_MESSAGE = "Please enter the role you are looking for, e.g. Recruiter, Product Manager, Junior Project Manager, Full Stack Developer.";
 const SCAN_TIMEOUT_MS = 90000;
 
 let latestCsv = "";
@@ -573,11 +572,6 @@ resultsBody.addEventListener("click", (event) => {
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   const targetRoleValue = targetRoleInput?.value?.trim() ?? "";
-  if (!targetRoleValue) {
-    setStatus(TARGET_ROLE_REQUIRED_MESSAGE, true);
-    targetRoleInput?.focus();
-    return;
-  }
 
   const selectedSourceIds = getSelectedSourceIds();
   if (!selectedSourceIds.length && !jobsFile.files[0]) {

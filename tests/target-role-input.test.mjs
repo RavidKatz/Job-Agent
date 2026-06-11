@@ -7,7 +7,7 @@
  * 3. A sparse CV + targetRoleInput clears searchTermWarning.
  * 4. The final dynamicSearchTerms reflect the target role, not old defaults.
  * 5. roleRecommendations always includes the target role family when targetRoleInput is set.
- * 6. Strong CV-derived direction stays first when score >= 75; target role is secondary.
+ * 6. targetRoleInput always leads roleRecommendations, even over a strong CV direction.
  * 7. directionSignals.positive includes signals from the target role family.
  * 8. Public profile distinguishes CV evidence from targetRoleInput fallback.
  * 9. scoreJob: careerDirectionFit > 0 for a matching job when targetRoleInput is set.
@@ -152,27 +152,23 @@ assert.ok(weakOpsProfile.roleRecommendations.some((r) => r.id === "hr-recruiting
 assert.equal(weakOpsProfile.roleRecommendations[0].id, "hr-recruiting", "target role should be first when CV evidence is weak (score < 75)");
 console.log("  weak ops CV roleRecommendations[0]:", weakOpsProfile.roleRecommendations[0].id, "✓");
 
-// 3c. Strong dev CV + targetRoleInput Recruiter — dev stays first.
+// 3c. Strong dev CV + targetRoleInput Recruiter — user-provided role ALWAYS wins.
 const devConfig = { ...config, targetRoleInput: "Recruiter" };
 const strongDevProfile = buildResumeProfile(strongDevCV, devConfig);
 console.log("Strong dev CV + Recruiter roleRecommendations:", strongDevProfile.roleRecommendations.map((r) => `${r.id}(${r.score})`));
-assert.ok(strongDevProfile.roleRecommendations.some((r) => r.id === "hr-recruiting"), "hr-recruiting should still appear in roleRecommendations");
-assert.ok(strongDevProfile.roleRecommendations.some((r) => r.id === "software-development"), "software-development should still appear");
-assert.ok(
-  strongDevProfile.roleRecommendations[0].id !== "hr-recruiting"
-  || strongDevProfile.roleRecommendations[0].score >= 75,
-  "when dev score >= 75, dev should be first OR recruiter at [0] should have score >= 75"
+assert.equal(
+  strongDevProfile.roleRecommendations[0].id,
+  "hr-recruiting",
+  "user-provided target role must lead even over a strong CV direction"
 );
-// Verify that hr-recruiting does NOT displace a clearly stronger dev direction.
-const devRec = strongDevProfile.roleRecommendations.find((r) => r.id === "software-development");
-const hrRec = strongDevProfile.roleRecommendations.find((r) => r.id === "hr-recruiting");
-if (devRec && devRec.score >= 75) {
-  assert.ok(
-    strongDevProfile.roleRecommendations.indexOf(devRec) < strongDevProfile.roleRecommendations.indexOf(hrRec),
-    "strong dev rec should appear before recruiter rec when score >= 75"
-  );
-  console.log("  strong dev CV: dev stays first ✓");
-}
+assert.ok(strongDevProfile.roleRecommendations[0].fromTargetRoleInput === true, "leading rec must be marked fromTargetRoleInput");
+assert.ok(strongDevProfile.roleRecommendations.some((r) => r.id === "software-development"), "software-development may remain as secondary context");
+assert.ok(
+  strongDevProfile.dynamicSearchTerms[0] === "Recruiter",
+  `search terms must lead with the target role, got: ${strongDevProfile.dynamicSearchTerms[0]}`
+);
+assert.equal(strongDevProfile.searchTermWarning, null, "no warning when targetRoleInput is provided");
+console.log("  strong dev CV: Recruiter wins over dev ✓");
 
 // 3d. Recruiter CV with targetRoleInput Recruiter — no duplicate.
 const recruiterConfig = { ...config, targetRoleInput: "Recruiter" };

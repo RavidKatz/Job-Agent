@@ -6,6 +6,6 @@
   "scripts": {
     "start": "node server.mjs",
     "match": "node run.mjs",
-    "test": "node tests/matcher.test.mjs && node tests/job-quality.test.mjs && node tests/profile-search-terms.test.mjs"
+    "test": "node tests/matcher.test.mjs && node tests/job-quality.test.mjs && node tests/profile-search-terms.test.mjs && node tests/inference-gate.test.mjs"
   }
 }

@@ -17,7 +17,7 @@ const uploadDir = path.join(rootDir, "uploads");
 const port = Number(process.env.PORT || 4317);
 const host = process.env.HOST || "127.0.0.1";
 const authStore = new AuthStore(rootDir);
-const TARGET_ROLE_REQUIRED_MESSAGE = "Please enter the role you are looking for, e.g. Recruiter, Product Manager, Junior Project Manager, Full Stack Developer.";
+const TARGET_ROLE_INFERENCE_FAILED_MESSAGE = "We could not confidently detect your target role from the CV. Please add the role you are looking for, e.g. Recruiter, Product Manager, Junior Project Manager, Full Stack Developer.";
 
 function json(response, status, payload) {
   response.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
@@ -117,11 +117,6 @@ async function handleMatch(request, response) {
     length: targetRoleInput.length
   });
 
-  if (!targetRoleInput) {
-    json(response, 400, { error: TARGET_ROLE_REQUIRED_MESSAGE });
-    return;
-  }
-
   if (!files.resume) {
     json(response, 400, { error: "Missing resume file." });
     return;
@@ -132,7 +127,7 @@ async function handleMatch(request, response) {
   if (Number.isFinite(requestedMinimumScore)) {
     config.minimumScore = Math.max(0, Math.min(100, requestedMinimumScore));
   }
-  config.targetRoleInput = targetRoleInput;
+  config.targetRoleInput = targetRoleInput || undefined;
 
   const resumeText = await extractResumeText(files.resume);
   if (resumeText.trim().length < 80) {
@@ -141,6 +136,11 @@ async function handleMatch(request, response) {
   }
 
   const ruleBasedProfile = buildResumeProfile(resumeText, config);
+  if (!targetRoleInput && ruleBasedProfile.roleRecommendations.length === 0) {
+    json(response, 422, { error: TARGET_ROLE_INFERENCE_FAILED_MESSAGE });
+    return;
+  }
+
   const claudeStartedAt = Date.now();
   const claudeProfile = await analyzeWithClaude(resumeText, config);
   console.info("Claude profile analysis", {

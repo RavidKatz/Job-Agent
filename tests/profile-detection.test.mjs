@@ -59,7 +59,7 @@ for (const { input, expected } of fallbackCases) {
 }
 console.log("Test A2 (fallback is generic): PASSED");
 
-// ─── Test A3: strong CV keeps its direction first; targetRoleInput is secondary ─
+// ─── Test A3: targetRoleInput always wins; strong CV direction is secondary ──
 
 const devCV = `Professional Experience
 2021 - present | Full Stack Developer, TechCorp
@@ -71,23 +71,20 @@ const strongProfile = buildResumeProfile(devCV, { ...config, targetRoleInput: "H
 console.log("Strong CV + conflicting targetRoleInput:");
 console.log("  roleRecommendations:", strongProfile.roleRecommendations.map((r) => `${r.id} (${r.score})`));
 
-assert.ok(strongProfile.roleRecommendations.length >= 1, "dev CV should produce CV-derived recommendations");
-assert.equal(strongProfile.roleRecommendations[0].id, "software-development",
-  "strong dev CV must stay first even when targetRoleInput conflicts");
-assert.ok(!strongProfile.roleRecommendations[0].fromTargetRoleInput,
-  "the leading recommendation for a strong CV must come from CV evidence, not targetRoleInput");
-// Phase 7B: targetRoleInput may appear as a secondary recommendation for display
-// purposes, but the leading direction is always CV-derived when score >= 75.
-const hrEntry = strongProfile.roleRecommendations.find((r) => r.id === "hr-recruiting");
-if (hrEntry) {
-  assert.ok(hrEntry.fromTargetRoleInput, "secondary hr entry must be tagged fromTargetRoleInput");
-  assert.ok(
-    strongProfile.roleRecommendations.indexOf(hrEntry) > 0,
-    "hr secondary entry must not be at position 0"
-  );
-}
+assert.ok(strongProfile.roleRecommendations.length >= 1, "dev CV should produce recommendations");
+assert.equal(strongProfile.roleRecommendations[0].id, "hr-recruiting",
+  "user-provided targetRoleInput must lead even when the CV strongly indicates another family");
+assert.ok(strongProfile.roleRecommendations[0].fromTargetRoleInput,
+  "the leading recommendation must be tagged fromTargetRoleInput");
+// The strong CV-derived direction remains available as secondary context.
+const devEntry = strongProfile.roleRecommendations.find((r) => r.id === "software-development");
+assert.ok(devEntry, "CV-derived software-development must remain as secondary context");
+assert.ok(
+  strongProfile.roleRecommendations.indexOf(devEntry) > 0,
+  "CV-derived direction must not outrank the user-provided target role"
+);
 
-console.log("Test A3 (strong CV direction preserved): PASSED");
+console.log("Test A3 (targetRoleInput wins over strong CV): PASSED");
 
 // ─── Test B1: Hebrew CVs produce profile evidence generically ────────────────
 

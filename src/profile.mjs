@@ -32,23 +32,18 @@ export function buildResumeProfile(resumeText, config) {
   const latestContext = extractLatestResumeContext(resumeText, config);
   let roleRecommendations = recommendRoles(resumeText, config, latestContext);
 
-  // When the user explicitly provides a target role, always ensure its family
-  // appears in roleRecommendations so the profile display, direction signals,
-  // and scoring all reflect the user's stated intent.
-  //
-  // Ordering rule: prefer the target role as the top recommendation unless
-  // the CV already has clearly strong evidence (score >= 75) for a different
-  // direction. In that case, the CV-backed direction leads and the target role
-  // is appended as a secondary option.
-  //
-  // If the CV already detected the same family, do not add a duplicate.
+  // When the user explicitly provides a target role, its family always leads
+  // roleRecommendations — the user's stated intent wins over CV-inferred
+  // directions, no matter how strong the CV evidence is. CV-inferred roles stay
+  // as secondary context. If the CV already detected the same family, that
+  // entry is lifted to the front (keeping its CV score) instead of duplicated.
   if (config.targetRoleInput) {
     const targetRec = recommendRoleFromTargetInput(config.targetRoleInput);
-    if (targetRec && !roleRecommendations.some((r) => r.id === targetRec.id)) {
-      const hasStrongCvRec = roleRecommendations.some((r) => r.score >= 75);
-      roleRecommendations = hasStrongCvRec
-        ? [...roleRecommendations, targetRec]
-        : [targetRec, ...roleRecommendations];
+    if (targetRec) {
+      const existing = roleRecommendations.find((r) => r.id === targetRec.id);
+      const rest = roleRecommendations.filter((r) => r.id !== targetRec.id);
+      const lead = existing ? { ...existing, fromTargetRoleInput: true } : targetRec;
+      roleRecommendations = [lead, ...rest];
     }
   }
 
