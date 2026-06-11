@@ -17,6 +17,7 @@ const uploadDir = path.join(rootDir, "uploads");
 const port = Number(process.env.PORT || 4317);
 const host = process.env.HOST || "127.0.0.1";
 const authStore = new AuthStore(rootDir);
+const TARGET_ROLE_REQUIRED_MESSAGE = "Please enter the role you are looking for, e.g. Recruiter, Product Manager, Junior Project Manager, Full Stack Developer.";
 
 function json(response, status, payload) {
   response.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
@@ -110,6 +111,16 @@ async function handleMatch(request, response) {
 
   const body = await readRequestBody(request);
   const { fields, files } = parseMultipart(body, request.headers["content-type"] ?? "");
+  const targetRoleInput = String(fields.targetRoleInput ?? "").trim();
+  console.info("Match request targetRoleInput", {
+    present: Boolean(targetRoleInput),
+    length: targetRoleInput.length
+  });
+
+  if (!targetRoleInput) {
+    json(response, 400, { error: TARGET_ROLE_REQUIRED_MESSAGE });
+    return;
+  }
 
   if (!files.resume) {
     json(response, 400, { error: "Missing resume file." });
@@ -121,10 +132,7 @@ async function handleMatch(request, response) {
   if (Number.isFinite(requestedMinimumScore)) {
     config.minimumScore = Math.max(0, Math.min(100, requestedMinimumScore));
   }
-  const targetRoleInput = String(fields.targetRoleInput ?? "").trim();
-  if (targetRoleInput) {
-    config.targetRoleInput = targetRoleInput;
-  }
+  config.targetRoleInput = targetRoleInput;
 
   const resumeText = await extractResumeText(files.resume);
   if (resumeText.trim().length < 80) {

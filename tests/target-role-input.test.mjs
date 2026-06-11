@@ -90,6 +90,12 @@ assert.ok(recruiterTerms.length >= 2, `should generate >=2 terms, got ${recruite
 assert.ok(recruiterTerms[0] === "Recruiter", "exact input should be first");
 assert.ok(recruiterTerms.some((t) => /recruit|hr|talent/i.test(t)), `should be HR-related, got: ${recruiterTerms.join(", ")}`);
 
+const techPmoTerms = expandTargetRoleTerms("Technological PMO");
+console.log("Technological PMO terms:", techPmoTerms);
+assert.ok(techPmoTerms.length >= 2, `should generate >=2 terms, got ${techPmoTerms.length}`);
+assert.ok(techPmoTerms[0] === "Technological PMO", "exact input should be first");
+assert.ok(techPmoTerms.some((t) => /pmo|project|delivery|technical/i.test(t)), `should include PMO/project terms, got: ${techPmoTerms.join(", ")}`);
+
 const devTerms = expandTargetRoleTerms("Full Stack Developer");
 console.log("Full Stack Developer terms:", devTerms);
 assert.ok(devTerms.length >= 2, `should generate >=2 terms, got ${devTerms.length}`);
@@ -117,6 +123,18 @@ assert.ok(
   `"Recruiter" should appear in dynamicSearchTerms, got: ${sparseProfile.dynamicSearchTerms.join(", ")}`
 );
 console.log("Sparse CV + targetRoleInput tests: PASSED");
+
+const configWithTechPmo = { ...config, targetRoleInput: "Technological PMO" };
+const sparseTechPmoProfile = buildResumeProfile(sparseCV, configWithTechPmo);
+console.log("Sparse CV + Technological PMO:");
+console.log("  searchTermWarning:", sparseTechPmoProfile.searchTermWarning);
+console.log("  dynamicSearchTerms:", sparseTechPmoProfile.dynamicSearchTerms.slice(0, 6));
+console.log("  roleRecommendations:", sparseTechPmoProfile.roleRecommendations.map((r) => `${r.id}(${r.score})`));
+assert.equal(sparseTechPmoProfile.searchTermWarning, null, "warning should be null when Technological PMO targetRoleInput is provided");
+assert.ok(
+  sparseTechPmoProfile.dynamicSearchTerms.some((t) => /pmo|project|delivery|technical/i.test(t)),
+  `Technological PMO should produce PMO/project search terms, got: ${sparseTechPmoProfile.dynamicSearchTerms.join(", ")}`
+);
 
 // ── 3. roleRecommendations always includes the target family ─────────────────
 

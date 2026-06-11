@@ -11,6 +11,7 @@ const thresholdSearchButton = document.querySelector("#thresholdSearchButton");
 const scanButton = document.querySelector("#scanButton");
 const exportButton = document.querySelector("#exportButton");
 const sourceCheckboxes = document.querySelectorAll('input[name="sourceIds"]');
+const targetRoleInput = document.querySelector("#targetRoleInput");
 const statusText = document.querySelector("#statusText");
 const jobsScanned = document.querySelector("#jobsScanned");
 const matchCount = document.querySelector("#matchCount");
@@ -25,6 +26,7 @@ const profileFacts = document.querySelector("#profileFacts");
 const roleRecommendations = document.querySelector("#roleRecommendations");
 
 const TRACKER_STORAGE_KEY = "job-agent-application-tracker-v1";
+const TARGET_ROLE_REQUIRED_MESSAGE = "Please enter the role you are looking for, e.g. Recruiter, Product Manager, Junior Project Manager, Full Stack Developer.";
 
 let latestCsv = "";
 let latestMatches = [];
@@ -569,6 +571,13 @@ resultsBody.addEventListener("click", (event) => {
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
+  const targetRoleValue = targetRoleInput?.value?.trim() ?? "";
+  if (!targetRoleValue) {
+    setStatus(TARGET_ROLE_REQUIRED_MESSAGE, true);
+    targetRoleInput?.focus();
+    return;
+  }
+
   const selectedSourceIds = getSelectedSourceIds();
   if (!selectedSourceIds.length && !jobsFile.files[0]) {
     setStatus("Select at least one job source before running the scan.", true);
@@ -586,10 +595,7 @@ form.addEventListener("submit", async (event) => {
     formData.append("resume", resumeFile.files[0]);
     formData.append("minimumScore", minimumScore.value);
     formData.append("sourceIds", JSON.stringify(selectedSourceIds));
-    const targetRoleValue = document.querySelector("#targetRoleInput")?.value?.trim();
-    if (targetRoleValue) {
-      formData.append("targetRoleInput", targetRoleValue);
-    }
+    formData.append("targetRoleInput", targetRoleValue);
     if (jobsFile.files[0]) {
       formData.append("jobsFile", jobsFile.files[0]);
     }
