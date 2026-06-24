@@ -1,0 +1,121 @@
+%% Job Agent — Project roadmap Mermaid diagrams (English labels for Draw.io)
+%% Paste any single block (between the %% markers) into Draw.io:
+%% Arrange > Insert > Advanced > Mermaid
+
+%% ===========================================================================
+%% 1. Full A-to-Z product roadmap
+%% ===========================================================================
+flowchart TD
+    START([Job Agent Vision]) --> A0[Foundation built:<br/>upload, extract, profile,<br/>scan, score, dashboard]
+    A0 --> A[Phase A<br/>Job Seeker Beta]
+
+    subgraph PA[Phase A - make it fast and trustworthy]
+      A1[Parallel sources + timeout]
+      A2[Stronger match quality]
+      A3[Single evaluator entry]
+      A1 --> A2 --> A3
+    end
+    A --> PA
+
+    PA --> B[Phase B<br/>Dashboard + Daily Digest]
+    subgraph PB[Phase B]
+      B1[Store CV per user]
+      B2[Link CV to application]
+      B3[Daily Job Digest]
+      B4[Migrate JSON to real DB]
+      B1 --> B2 --> B3 --> B4
+    end
+    B --> PB
+
+    PB --> C[Phase C<br/>Recruiter Side]
+    subgraph PC[Phase C]
+      C1[Recruiter account]
+      C2[Job Desc to jobProfile]
+      C3[Candidate vector store]
+      C4[Reverse ranking]
+      C1 --> C2 --> C3 --> C4
+    end
+    C --> PC
+    PC --> DONE([Two-sided marketplace])
+
+%% ===========================================================================
+%% 2. Current beta execution flow
+%% ===========================================================================
+flowchart TD
+    U[User uploads CV] --> EX[Extract text]
+    EX --> PR[Build candidate profile]
+    PR --> TR{Target role or<br/>detected roles?}
+    TR -->|No| ERR[422 Ask for target role]
+    TR -->|Yes| SC[Scan job sources<br/>SERIAL - bottleneck]
+    SC --> NM[Normalize + quality check]
+    NM --> SCO[Score each job - rules engine]
+    SCO --> TH{Above threshold?}
+    TH -->|Yes| M[Matches]
+    TH -->|No| GATE[Relevance gate]
+    GATE --> NEAR[Near matches]
+    M --> OUT[Results + diagnostics]
+    NEAR --> OUT
+    OUT --> DASH[Save to dashboard]
+
+%% ===========================================================================
+%% 3. Current blocker -> next action decision tree
+%% ===========================================================================
+flowchart TD
+    Q{Where are we stuck?}
+    Q -->|Scan hangs / slow| D1[Blocker 1:<br/>serial source loading]
+    Q -->|Irrelevant results| D2[Blocker 2:<br/>regex scoring engine]
+    Q -->|Few real jobs| D3[Blocker 3:<br/>scraping sources]
+    Q -->|Two scoring paths| D6[Blocker 6:<br/>job-fit not wired]
+
+    D1 --> A1[Action: Promise.allSettled<br/>+ per-source timeout]
+    D6 --> A6[Action: wire job-fit.mjs<br/>as evaluator entry]
+    D2 --> A2[Action: Phase 0 embeddings POC<br/>offline compare only]
+    D3 --> A3[Action: enable real APIs<br/>e.g. Adzuna with keys]
+
+    A1 --> NEXT1[Next: unify scoring path]
+    A6 --> NEXT2[Next: embeddings POC]
+    A2 --> NEXT3[Next: semantic reranking<br/>behind feature flag]
+    A3 --> NEXT4[Next: Phase B]
+
+%% ===========================================================================
+%% 4. Phase A/B/C roadmap
+%% ===========================================================================
+flowchart LR
+    subgraph A[Phase A needs]
+      A1[Parallel sources + timeout]
+      A2[Stronger match quality]
+      A3[Single evaluator entry job-fit.mjs]
+    end
+    subgraph B[Phase B needs]
+      B1[Store CV per user]
+      B2[Link CV to application]
+      B3[Daily Job Digest]
+      B4[Migrate JSON to real DB]
+    end
+    subgraph C[Phase C needs]
+      C1[Recruiter account type]
+      C2[Job Description to jobProfile]
+      C3[Candidate vector store / search]
+      C4[Reverse ranking direction]
+    end
+    A --> B --> C
+
+%% ===========================================================================
+%% 5. Future matching intelligence roadmap (layered, additive)
+%% ===========================================================================
+flowchart TD
+    L1[Layer 1: Rules engine<br/>scoreJob - EXISTS, stays as base]
+    L2[Layer 2: Embeddings POC<br/>Phase 0 - isolated, offline, measured]
+    L3[Layer 3: Semantic reranking<br/>behind feature flag - adds, not replaces]
+    L4[Layer 4: AI API for top jobs only<br/>deep explained eval, low cost]
+
+    L1 --> G1{POC shows<br/>measurable gain?}
+    L2 --> G1
+    G1 -->|Yes| L3
+    G1 -->|No| L1
+    L3 --> G2{Reranking stable?}
+    G2 -->|Yes| L4
+    G2 -->|No| L3
+
+    note[Principle: each layer enters only after<br/>the previous is stable and measured.<br/>Layers stack, never delete the prior one.]
+    L4 -.-> note

@@ -1,0 +1,141 @@
+%% Job Agent — Mermaid diagrams (English labels for Draw.io / RTL safety)
+%% Paste any single block (between the %% markers) into Draw.io:
+%% Arrange > Insert > Advanced > Mermaid
+
+%% ===========================================================================
+%% 1. High-level architecture
+%% ===========================================================================
+flowchart TD
+    U[User] --> FE[Frontend public/app.js]
+    FE -->|POST /api/match multipart| SRV[server.mjs]
+    SRV --> EXT[CV Extraction<br/>extract_resume.py]
+    EXT --> PROF[Candidate Profile<br/>profile.mjs + role-recommender.mjs]
+    PROF -.optional.-> CLAUDE[Claude enrichment<br/>claude-profile.mjs]
+    CLAUDE -.-> PROF
+    PROF --> SRC[Job Sources<br/>connectors/index.mjs]
+    SRC --> NORM[Normalize + Quality<br/>job-model.mjs]
+    NORM --> ENG[Matching Engine<br/>matcher.mjs scoreJob]
+    PROF --> ENG
+    ENG --> PIPE[Filter + Gate + Diagnostics<br/>pipeline.mjs]
+    PIPE --> RES[Results JSON]
+    RES --> FE
+    FE --> DASH[Applications Dashboard<br/>tracker.js]
+    DASH -->|/api/applications| STORE[(app-db.json<br/>auth-store.mjs)]
+
+%% ===========================================================================
+%% 2. Detailed /api/match flow
+%% ===========================================================================
+flowchart TD
+    A[POST /api/match] --> B[parseMultipart<br/>fields + files]
+    B --> C{resume file present?}
+    C -->|No| C1[400 Missing resume file]
+    C -->|Yes| D[loadConfig search-profile.json]
+    D --> E[Apply minimumScore + targetRoleInput to config]
+    E --> F[extractResumeText<br/>spawn python]
+    F --> G{text length >= 80?}
+    G -->|No| G1[422 Not enough text]
+    G -->|Yes| H[buildResumeProfile<br/>rule-based]
+    H --> I{targetRoleInput empty<br/>AND no roleRecommendations?}
+    I -->|Yes| I1[422 Cannot detect target role]
+    I -->|No| J[analyzeWithClaude<br/>optional enrichment]
+    J --> K[mergeClaudeProfile]
+    K --> L{user logged in?}
+    L -->|Yes| L1[authStore.saveProfile]
+    L --> M{jobs uploaded in payload?}
+    L1 --> M
+    M -->|Yes| N1[Use uploaded jobs JSON]
+    M -->|No| N2[loadJobs from sources<br/>connectors/index.mjs]
+    N1 --> O[analyzeJobsWithProfile]
+    N2 --> O
+    O --> P[assessJobQuality per job]
+    P --> Q[rankJobs scoreJob per job]
+    Q --> R[Split: matches >= threshold<br/>vs belowThreshold]
+    R --> S[buildGateState +<br/>isJobOnTarget relevance gate]
+    S --> T{any matches?}
+    T -->|Yes| T1[nearMatches = empty]
+    T -->|No| T2[nearMatches = top relevant<br/>below threshold]
+    T1 --> V[buildDiagnostics]
+    T2 --> V
+    V --> W[200 JSON:<br/>matches, nearMatches,<br/>resumeProfile, diagnostics, csv]
+
+%% ===========================================================================
+%% 3. Data flow
+%% ===========================================================================
+flowchart LR
+    subgraph Input
+      CV[CV file<br/>PDF/DOCX/TXT]
+      TR[targetRoleInput<br/>optional]
+      MS[minimumScore]
+      SI[sourceIds]
+    end
+
+    CV --> RT[resumeText string]
+    RT --> RP[resumeProfile<br/>years, seniority, education,<br/>lastRole, roleRecommendations,<br/>dynamicSearchTerms]
+    TR --> RP
+
+    RP -->|dynamicSearchTerms| QRY[Source queries]
+    SI --> QRY
+    QRY --> RAWJ[raw jobs per source]
+    RAWJ --> NJ[normalized job<br/>title, company, description,<br/>applyUrl, tags, quality]
+
+    RP --> SC[scoreJob]
+    NJ --> SC
+    MS --> FILT[threshold filter]
+    SC -->|matchPercent, fitAnalysis,<br/>matchBreakdown, warnings| FILT
+
+    FILT --> OUT[response JSON]
+    NJ -->|quality warnings| OUT
+    RP -->|public profile| OUT
+
+    OUT --> DASHDATA[(app-db.json)]
+    DASHDATA -->|applications, profile| DASHV[Dashboard view]
+
+%% ===========================================================================
+%% 4. Target architecture vision (bidirectional engine)
+%% ===========================================================================
+flowchart TD
+    subgraph PhaseA[Phase A - Job Seeker]
+      JS[Job Seeker] --> UPCV[Upload CV]
+      UPCV --> CPROF[candidateProfile]
+    end
+
+    subgraph PhaseC[Phase C - Recruiter]
+      REC[Recruiter] --> UPJD[Upload Job Description]
+      UPJD --> JPROF[jobProfile]
+    end
+
+    CPROF --> ENGINE[Bidirectional Match Engine<br/>candidateProfile vs jobProfile]
+    JPROF --> ENGINE
+
+    ENGINE -->|candidate to jobs| JOBRES[Best Jobs for Candidate]
+    ENGINE -->|job to candidates| CANDRES[Best Candidates for Job]
+
+    JOBRES --> DASH[Phase B Dashboard<br/>applications + which CV]
+    CANDRES --> RDASH[Recruiter Dashboard]
+
+    DASH --> DB[(Real DB + CV store<br/>future: Postgres)]
+    RDASH --> DB
+    CPROF --> DB
+    JPROF --> DB
+
+%% ===========================================================================
+%% 5. Phase A/B/C roadmap
+%% ===========================================================================
+flowchart LR
+    subgraph A[Phase A needs]
+      A1[Parallel sources + timeout]
+      A2[Stronger match quality]
+      A3[Single evaluator entry job-fit.mjs]
+    end
+    subgraph B[Phase B needs]
+      B1[Link CV to each application]
+      B2[Store multiple CVs per user]
+      B3[Migrate JSON to real DB]
+    end
+    subgraph C[Phase C needs]
+      C1[Recruiter account type]
+      C2[Job Description to jobProfile]
+      C3[Candidate vector store / search]
+      C4[Reverse ranking direction]
+    end
+    A --> B --> C
