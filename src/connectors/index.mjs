@@ -14,6 +14,37 @@ export function resolveLocal(filePath, rootDir) {
   return path.isAbsolute(filePath) ? filePath : path.join(rootDir, filePath);
 }
 
+// Per-source aggregate timeout. This caps the TOTAL time a single source may
+// take (across all of its internal requests), on top of the existing
+// per-request timeouts inside http.mjs / html.mjs. With parallel loading, the
+// whole scan is bounded by this value instead of the sum of all sources.
+const DEFAULT_SOURCE_TIMEOUT_MS = 22000;
+
+// Races a promise against a timeout so a slow/hanging source cannot block the
+// scan. Rejects with a clear error on timeout; always clears the timer.
+export function withTimeout(promise, ms) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`timed out after ${ms}ms`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
+// Returns the job-fetching function for a fetchable source type, or null for
+// types that do not fetch (searchPage) or are unsupported.
+function getSourceLoader(source, rootDir) {
+  switch (source.type) {
+    case "file": return () => loadFileJobs(source, rootDir, resolveLocal);
+    case "jsonApi": return () => loadJsonApiJobs(source);
+    case "remotive": return () => loadRemotiveJobs(source);
+    case "himalayas": return () => loadHimalayasJobs(source);
+    case "hiremetech": return () => loadHireMeTechJobs(source);
+    case "alljobs": return () => loadAllJobs(source);
+    case "drushim": return () => loadDrushim(source);
+    default: return null;
+  }
+}
+
 export async function loadJobsFromSources({ rootDir, sourcesPath, searchTerms = [], sourceIds = [] }) {
   const config = await readJson(resolveLocal(sourcesPath, rootDir));
   const selectedSourceIds = new Set((sourceIds ?? []).filter(Boolean));
@@ -41,35 +72,41 @@ export async function loadJobsFromSources({ rootDir, sourcesPath, searchTerms = 
     notices.push("We could not confidently detect your target roles. Please add a target role or improve your CV text.");
   }
 
+  // Build sourceLinks synchronously and collect the fetch tasks. Links are
+  // added here (not inside the timed fetch) so direct/search links remain
+  // available even when a source later times out or fails.
+  const fetchTasks = [];
   for (const source of enabledSources) {
-    try {
-      if (source.type !== "searchPage") {
-        sourceLinks.push(...buildDirectSourceLinks(source));
-      }
-
-      if (source.type === "file") {
-        jobs.push(...normalizeJobs(await loadFileJobs(source, rootDir, resolveLocal), source));
-      } else if (source.type === "jsonApi") {
-        jobs.push(...normalizeJobs(await loadJsonApiJobs(source), source));
-      } else if (source.type === "remotive") {
-        jobs.push(...normalizeJobs(await loadRemotiveJobs(source), source));
-      } else if (source.type === "himalayas") {
-        jobs.push(...normalizeJobs(await loadHimalayasJobs(source), source));
-      } else if (source.type === "hiremetech") {
-        jobs.push(...normalizeJobs(await loadHireMeTechJobs(source), source));
-      } else if (source.type === "alljobs") {
-        jobs.push(...normalizeJobs(await loadAllJobs(source), source));
-      } else if (source.type === "drushim") {
-        jobs.push(...normalizeJobs(await loadDrushim(source), source));
-      } else if (source.type === "searchPage") {
-        sourceLinks.push(...buildSearchPageLinks(source));
-      } else {
-        notices.push(`${source.id}: unsupported source type "${source.type}"`);
-      }
-    } catch (error) {
-      notices.push(`${source.id}: ${error.message}`);
+    if (source.type === "searchPage") {
+      sourceLinks.push(...buildSearchPageLinks(source));
+      continue;
     }
+
+    sourceLinks.push(...buildDirectSourceLinks(source));
+
+    const loader = getSourceLoader(source, rootDir);
+    if (!loader) {
+      notices.push(`${source.id}: unsupported source type "${source.type}"`);
+      continue;
+    }
+
+    const timeoutMs = Number(source.sourceTimeoutMs) > 0
+      ? Number(source.sourceTimeoutMs)
+      : DEFAULT_SOURCE_TIMEOUT_MS;
+    // Start the loader eagerly so all sources run in parallel.
+    fetchTasks.push({ source, promise: withTimeout(loader(), timeoutMs) });
   }
+
+  // Run every source in parallel; one slow/failing source never blocks others.
+  const settled = await Promise.allSettled(fetchTasks.map((task) => task.promise));
+  settled.forEach((result, index) => {
+    const { source } = fetchTasks[index];
+    if (result.status === "fulfilled") {
+      jobs.push(...normalizeJobs(result.value, source));
+    } else {
+      notices.push(`${source.id}: ${result.reason?.message ?? result.reason}`);
+    }
+  });
 
   for (const source of disabledSources) {
     if (source.status || source.reason) {
