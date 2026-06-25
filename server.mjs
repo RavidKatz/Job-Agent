@@ -181,16 +181,28 @@ async function handleMatch(request, response) {
     return;
   }
 
+  const profileBuildStartedAt = Date.now();
+  console.info("Profile build started", { textLength: resumeText.length });
   const ruleBasedProfile = buildResumeProfile(resumeText, config);
+  console.info("Profile build finished", {
+    durationMs: Date.now() - profileBuildStartedAt,
+    roleCount: ruleBasedProfile.roleRecommendations.length,
+    termCount: ruleBasedProfile.dynamicSearchTerms?.length ?? 0
+  });
+
   if (!targetRoleInput && ruleBasedProfile.roleRecommendations.length === 0) {
     json(response, 422, { error: TARGET_ROLE_INFERENCE_FAILED_MESSAGE });
     return;
   }
+  console.info("Role inference finished", {
+    hasTargetRole: Boolean(targetRoleInput),
+    roleCount: ruleBasedProfile.roleRecommendations.length
+  });
 
   const claudeStartedAt = Date.now();
+  console.info("Claude analysis started");
   const claudeProfile = await analyzeWithClaude(resumeText, config);
-  console.info("Claude profile analysis", {
-    textLength: resumeText.length,
+  console.info("Claude analysis finished", {
     success: Boolean(claudeProfile),
     durationMs: Date.now() - claudeStartedAt
   });
@@ -206,14 +218,24 @@ async function handleMatch(request, response) {
   }
 
   const uploadedJobs = parseJobsPayload(fields, files);
+  const selectedSourceIds = parseSelectedSources(fields.sourceIds);
+  const sourceLoadStartedAt = Date.now();
+  console.info("Job source loading started", { sourceIds: selectedSourceIds });
   const sourceResult = uploadedJobs
     ? { jobs: uploadedJobs, notices: ["Using uploaded jobs JSON."], sourceLinks: [] }
     : await loadJobs(rootDir, {
         sourcesPath: "config/sources.json",
         searchTerms: resumeProfile.dynamicSearchTerms,
-        sourceIds: parseSelectedSources(fields.sourceIds)
+        sourceIds: selectedSourceIds
       });
+  console.info("Job source loading finished", {
+    durationMs: Date.now() - sourceLoadStartedAt,
+    jobCount: sourceResult.jobs.length,
+    noticeCount: sourceResult.notices.length
+  });
 
+  const matchStartedAt = Date.now();
+  console.info("Job matching started", { jobCount: sourceResult.jobs.length });
   const analysis = analyzeJobsWithProfile({
     resumeProfile,
     jobs: sourceResult.jobs,
@@ -221,7 +243,17 @@ async function handleMatch(request, response) {
     sourceNotices: sourceResult.notices,
     sourceLinks: sourceResult.sourceLinks
   });
+  console.info("Job matching finished", {
+    durationMs: Date.now() - matchStartedAt,
+    matches: analysis.matches.length,
+    nearMatches: analysis.nearMatches.length
+  });
 
+  console.info("Match response ready", {
+    matches: analysis.matches.length,
+    nearMatches: analysis.nearMatches.length,
+    jobsScanned: analysis.jobsScanned
+  });
   json(response, 200, {
     ...analysis,
     csv: `\uFEFF${toCsv(analysis.matches)}`
