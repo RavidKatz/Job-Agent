@@ -234,13 +234,28 @@ async function handleMatch(request, response) {
     noticeCount: sourceResult.notices.length
   });
 
+  const MATCHING_JOB_LIMIT = 80;
+  const loadedJobCount = sourceResult.jobs.length;
+  const cappedJobs = sourceResult.jobs.slice(0, MATCHING_JOB_LIMIT);
+  const matchNotices = [...sourceResult.notices];
+  if (loadedJobCount > MATCHING_JOB_LIMIT) {
+    console.info("Job matching cap applied", {
+      loaded: loadedJobCount,
+      capped: cappedJobs.length,
+      limit: MATCHING_JOB_LIMIT
+    });
+    matchNotices.push(
+      `Matching limited to first ${MATCHING_JOB_LIMIT} jobs for beta performance (${loadedJobCount} loaded).`
+    );
+  }
+
   const matchStartedAt = Date.now();
-  console.info("Job matching started", { jobCount: sourceResult.jobs.length });
+  console.info("Job matching started", { jobCount: cappedJobs.length });
   const analysis = analyzeJobsWithProfile({
     resumeProfile,
-    jobs: sourceResult.jobs,
+    jobs: cappedJobs,
     config,
-    sourceNotices: sourceResult.notices,
+    sourceNotices: matchNotices,
     sourceLinks: sourceResult.sourceLinks
   });
   console.info("Job matching finished", {
