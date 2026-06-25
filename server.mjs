@@ -59,11 +59,18 @@ function findPythonExecutable() {
   return candidates[0];
 }
 
+const RESUME_EXTRACT_TIMEOUT_MS = 30_000;
+const RESUME_EXTRACT_MAX_STDOUT_BYTES = 500_000; // 500 KB — generous for any CV text
+const RESUME_EXTRACT_MAX_STDERR_BYTES = 8_000;   // diagnostics only
+
 async function extractResumeText(file) {
   await fs.mkdir(uploadDir, { recursive: true });
   const filename = `${Date.now()}-${sanitizeFilename(file.filename)}`;
   const filePath = path.join(uploadDir, filename);
   await fs.writeFile(filePath, file.buffer);
+
+  const extractStartedAt = Date.now();
+  console.info("CV extraction started", { filename: file.filename, bytes: file.buffer.length });
 
   try {
     const python = findPythonExecutable();
@@ -73,16 +80,55 @@ async function extractResumeText(file) {
       const child = spawn(python, [scriptPath, filePath], { cwd: rootDir });
       const stdout = [];
       const stderr = [];
+      let stdoutBytes = 0;
+      let stderrBytes = 0;
+      let settled = false;
 
-      child.stdout.on("data", (chunk) => stdout.push(chunk));
-      child.stderr.on("data", (chunk) => stderr.push(chunk));
-      child.on("error", reject);
-      child.on("close", (code) => {
-        if (code !== 0) {
-          reject(new Error(Buffer.concat(stderr).toString("utf8") || `Resume extraction failed with code ${code}.`));
+      function settle(fn, value) {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        fn(value);
+      }
+
+      const timer = setTimeout(() => {
+        child.kill("SIGKILL");
+        console.info("CV extraction timed out", { durationMs: Date.now() - extractStartedAt });
+        settle(reject, new Error("CV extraction timed out."));
+      }, RESUME_EXTRACT_TIMEOUT_MS);
+
+      child.stdout.on("data", (chunk) => {
+        stdoutBytes += chunk.length;
+        if (stdoutBytes > RESUME_EXTRACT_MAX_STDOUT_BYTES) {
+          child.kill("SIGKILL");
+          console.info("CV extraction stdout cap exceeded", { stdoutBytes });
+          settle(reject, new Error("CV extraction output exceeded size limit."));
           return;
         }
-        resolve(Buffer.concat(stdout).toString("utf8"));
+        stdout.push(chunk);
+      });
+
+      child.stderr.on("data", (chunk) => {
+        stderrBytes += chunk.length;
+        if (stderrBytes <= RESUME_EXTRACT_MAX_STDERR_BYTES) stderr.push(chunk);
+      });
+
+      child.on("error", (err) => {
+        console.info("CV extraction failed", { error: err.message, durationMs: Date.now() - extractStartedAt });
+        settle(reject, err);
+      });
+
+      child.on("close", (code) => {
+        const durationMs = Date.now() - extractStartedAt;
+        if (code !== 0) {
+          const errMsg = Buffer.concat(stderr).toString("utf8") || `Resume extraction failed with code ${code}.`;
+          console.info("CV extraction failed", { code, durationMs });
+          settle(reject, new Error(errMsg));
+          return;
+        }
+        const text = Buffer.concat(stdout).toString("utf8");
+        console.info("CV extraction finished", { durationMs, textLength: text.length });
+        settle(resolve, text);
       });
     });
   } finally {
